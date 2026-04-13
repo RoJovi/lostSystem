@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jovi.mapper.PostMapper">
+
+    <resultMap id="PostMap" type="com.jovi.pojo.Post">
+        <id column="id" property="id"/>
+        <result column="type" property="type"/>
+        <result column="title" property="title"/>
+        <result column="status" property="status"/>
+        <result column="isTop" property="isTop"/>
+        <result column="viewCount" property="viewCount"/>
+        <result column="createTime" property="createTime"/>
+        <result column="imageUrl" property="imageUrl"/>
+    </resultMap>
+
+    <select id="SelectPostByUserId" resultMap="PostMap">
+        SELECT
+            id,
+            0 as type,
+            title,
+            status,
+            is_top as isTop,
+            view_count as viewCount,
+            create_time as createTime,
+            image_url as imageUrl
+        FROM lost_item
+        WHERE user_id = #{userId}
+
+        UNION ALL
+
+        SELECT
+            id,
+            1 as type,
+            title,
+            status,
+            0 as isTop,
+            view_count as viewCount,
+            create_time as createTime,
+            image_url as imageUrl
+        FROM found_item
+        WHERE user_id = #{userId}
+
+        ORDER BY createTime DESC
+    </select>
+
+</mapper>
