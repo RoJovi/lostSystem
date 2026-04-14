@@ -1,19 +1,13 @@
 package com.jovi.service.impl;
 
-import com.jovi.mapper.AdminMappper;
 import com.jovi.mapper.LocationMapper;
-import com.jovi.pojo.Admin;
 import com.jovi.pojo.Location;
 import com.jovi.pojo.LocationVO;
-import com.jovi.pojo.LoginAdmin;
-import com.jovi.service.AdminService;
 import com.jovi.service.LocationService;
-import com.jovi.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,41 +22,50 @@ public class LocationServiceImpl implements LocationService {
     private LocationMapper locationMapper;
 
     @Override
-    public List<Location> getTreeList() {
+    public List<LocationVO> getTreeList() {
         // 1. 查询所有地点
         List<Location> allLocations = locationMapper.selectAll();
-/*
+
+        if (allLocations == null || allLocations.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         // 2. 转换为 VO
         List<LocationVO> voList = allLocations.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
 
-        // 3. 构建父子关系（用 Map 快速查找）
-        Map<Integer, LocationVO> map = new HashMap<>();
+        // 3. 构建 id -> VO 的映射，方便快速查找父节点
+        Map<Integer, LocationVO> nodeMap = new HashMap<>();
         for (LocationVO vo : voList) {
-            map.put(vo.getId(), vo);
+            nodeMap.put(vo.getId(), vo);
         }
 
-        // 4. 组装树形结构
+        // 4. 构建父子关系
         List<LocationVO> treeList = new ArrayList<>();
-        for (LocationVO vo : voList) {
-            Integer parentId = getParentId(vo.getId(), allLocations);
+        for (Location location : allLocations) {
+            LocationVO vo = nodeMap.get(location.getId());
+            Integer parentId = location.getParentId();
+
             if (parentId == null || parentId == 0) {
                 // 顶级节点
                 treeList.add(vo);
             } else {
-                // 子节点，添加到父节点的 children 中
-                LocationVO parent = map.get(parentId);
+                // 子节点，找到父节点并添加
+                LocationVO parent = nodeMap.get(parentId);
                 if (parent != null) {
                     if (parent.getChildren() == null) {
                         parent.setChildren(new ArrayList<>());
                     }
                     parent.getChildren().add(vo);
+                } else {
+                    // 父节点不存在（数据异常），作为顶级节点处理
+                    treeList.add(vo);
                 }
             }
-        }*/
+        }
 
-        return allLocations;
+        return treeList;
     }
 
     @Override
@@ -71,6 +74,7 @@ public class LocationServiceImpl implements LocationService {
         location.setName(name);
         location.setParentId(parentId != null ? parentId : 0);
         location.setUserId(userId);
+        location.setIsCustom(1);
 
         locationMapper.insert(location);
         log.info("用户 {} 添加自定义地点: {}, 父级: {}", userId, name, parentId);
@@ -82,15 +86,7 @@ public class LocationServiceImpl implements LocationService {
         LocationVO vo = new LocationVO();
         vo.setId(location.getId());
         vo.setName(location.getName());
+        vo.setChildren(new ArrayList<>());
         return vo;
-    }
-
-    private Integer getParentId(Integer id, List<Location> allLocations) {
-        for (Location loc : allLocations) {
-            if (loc.getId().equals(id)) {
-                return loc.getParentId();
-            }
-        }
-        return null;
     }
 }

@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 public interface FoundItemMapper {
 
     //插入新帖子并获取生成的主键id赋值回去
-    @Insert("INSERT INTO found_item (user_id, title, location_id, location_name, lost_time, description, image_url, create_time, update_time) " +
-            "VALUES (#{userId}, #{title}, #{locationId}, #{locationName}, #{lostTime}, #{description}, #{imageUrl}, NOW(), NOW())")
-    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+    @Insert("INSERT INTO found_item (user_id, title, location_id, location_name, found_time, description, image_url, create_time, update_time) " +
+            "VALUES (#{userId}, #{title}, #{locationId}, #{locationName}, #{foundTime}, #{description}, #{imageUrl}, NOW(), NOW())")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(FoundItem foundItem);
 
 
@@ -40,5 +40,15 @@ public interface FoundItemMapper {
     @Update("UPDATE found_item SET status = 1, update_time = NOW() WHERE id = #{id}")
     int setResolved(Integer id);
 
+    @Select("SELECT title FROM found_item WHERE id = #{id}")
+    String selectTitleById(Integer id);
 
+    @Select("SELECT COUNT(*) FROM found_item")
+    int countAll();
+
+    @Select("SELECT COUNT(*) FROM found_item WHERE status = 1")
+    int countResolved();
+
+    @Delete("DELETE FROM found_item WHERE user_id = #{userId}")
+    int deleteByUserId(Integer userId);
 }

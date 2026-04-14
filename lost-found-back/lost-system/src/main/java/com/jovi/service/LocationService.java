@@ -8,6 +8,6 @@ import com.jovi.pojo.LoginAdmin;
 import java.util.List;
 
 public interface LocationService {
-    List<Location> getTreeList();
+    List<LocationVO> getTreeList();
     Integer addLocation(String name, Integer parentId, Integer userId);
 }

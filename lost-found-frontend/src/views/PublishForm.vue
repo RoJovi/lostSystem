@@ -22,7 +22,7 @@
           v-model="form.time"
           type="datetime"
           placeholder="选择时间"
-          value-format="YYYY-MM-DD HH:mm:ss"
+          value-format="YYYY-MM-DDTHH:mm:ss"
           :shortcuts="dateShortcuts"
         />
       </el-form-item>
@@ -128,7 +128,7 @@ const uploadHeaders = {
 
 const loadLocations = async () => {
   const res = await getLocations()
-  locationTree.value = res.data
+  locationTree.value = res
 }
 
 const handleLocationChange = (val) => {
@@ -152,7 +152,7 @@ const handleAIComplete = async () => {
   aiLoading.value = true
   try {
     const res = await aiComplete(props.type, form.title, form.description)
-    form.description = res.data
+    form.description = res
     hasUsedAI.value = true
     ElMessage.success('AI已补充描述')
   } catch (error) {

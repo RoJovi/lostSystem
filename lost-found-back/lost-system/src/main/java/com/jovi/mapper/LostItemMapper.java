@@ -5,6 +5,8 @@ import com.jovi.pojo.LostItem;
 import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface LostItemMapper {
@@ -45,4 +47,22 @@ public interface LostItemMapper {
     // 设置为已找回
     @Update("UPDATE lost_item SET status = 1, update_time = NOW() WHERE id = #{id}")
     int setResolved(Integer id);
+
+    @Select("SELECT title FROM lost_item WHERE id = #{id}")
+    String selectTitleById(Integer id);
+
+    @Select("SELECT COUNT(*) FROM lost_item")
+    int countAll();
+
+    @Select("SELECT COUNT(*) FROM lost_item WHERE status = 1")
+    int countResolved();
+
+    @Select("SELECT location_name as name, COUNT(*) as count FROM lost_item GROUP BY location_name ORDER BY count DESC LIMIT 5")
+    List<Map<String, Object>> getTopLocations();
+
+    @Delete("DELETE FROM lost_item WHERE user_id = #{userId}")
+    int deleteByUserId(Integer userId);
+
+    @Update("UPDATE lost_item SET is_top = 1, top_expire_time = #{expireTime} WHERE id = #{id}")
+    int setTop(@Param("id") Integer id, @Param("expireTime") LocalDateTime expireTime);
 }

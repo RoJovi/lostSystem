@@ -102,8 +102,8 @@ const loadReports = async () => {
     // 兼容处理
     if (Array.isArray(res)) {
       reportList.value = res
-    } else if (res?.data && Array.isArray(res.data)) {
-      reportList.value = res.data
+    } else if (res?.data && Array.isArray(res)) {
+      reportList.value = res
     } else {
       reportList.value = []
     }

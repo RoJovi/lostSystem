@@ -31,7 +31,7 @@ public class LoginAdminController {
             return Result.success(info);
         }
 
-        log.warn("登录失败，账号或密码错误: {}", info.getAdminNum());
+        log.warn("登录失败，账号或密码错误");
         return Result.error("用户名或密码错误");
     }
 }

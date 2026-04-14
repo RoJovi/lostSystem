@@ -73,11 +73,11 @@ public class filter implements Filter {
                 }
             }
 
-            // 访问普通用户接口，必须是 user
+            /* 访问普通用户接口，必须是 user
             if (userType != 0) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
-            }
+            }*/
 
 
             // 存入 request，供 Controller 使用

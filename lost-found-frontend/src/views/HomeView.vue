@@ -43,15 +43,17 @@
         <button class="sort-btn" @click="toggleSort">
           {{ sortOrder === 'desc' ? '时间倒序' : '时间正序' }} 🔽
         </button>
-        <div class="location-select" @click="showLocationPicker = !showLocationPicker">
-          <span>{{ selectedLocationName || '全部地点' }} ▼</span>
-          <div class="location-dropdown" v-show="showLocationPicker">
-            <div @click="selectLocation(null)">全部地点</div>
-            <div v-for="loc in locationTree" :key="loc.id" @click="selectLocation(loc.id)">
-              {{ loc.name }}
-            </div>
-          </div>
-        </div>
+   <div class="location-select" @click="showLocationPicker = !showLocationPicker">
+  <span>{{ selectedLocationName || '全部地点' }} ▼</span>
+  <div class="location-dropdown" v-show="showLocationPicker">
+    <div @click="handleNodeClick({ id: null, name: '' })">全部地点</div>
+    <el-tree 
+      :data="locationTree" 
+      :props="{ label: 'name', children: 'children' }"
+      @node-click="handleNodeClick"
+    />
+  </div>
+</div>
       </div>
     </div>
 
@@ -171,6 +173,14 @@ const toggleSort = () => {
 const selectLocation = (id, name) => {
   selectedLocationId.value = id
   selectedLocationName.value = name || ''
+  showLocationPicker.value = false
+  loadFeed()
+}
+
+// 树形菜单点击处理
+const handleNodeClick = (data) => {
+  selectedLocationId.value = data.id
+  selectedLocationName.value = data.name
   showLocationPicker.value = false
   loadFeed()
 }

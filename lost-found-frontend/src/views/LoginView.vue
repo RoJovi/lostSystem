@@ -54,7 +54,7 @@
 
    <!-- 注册弹窗 -->
 <el-dialog v-model="showRegisterDialog" title="注册账号" width="400px">
-  <el-form :model="registerForm" label-width="80px">
+  <el-form :model="registerForm" label-width="80px" @submit.prevent="handleRegister">
     <el-form-item label="昵称" required>
       <el-input v-model="registerForm.nickname" placeholder="请输入昵称（可修改）" />
     </el-form-item>
@@ -73,10 +73,10 @@
   </el-form>
   <template #footer>
     <el-button @click="showRegisterDialog = false">取消</el-button>
-    <el-button type="primary" @click="handleRegister">注册</el-button>
+    <el-button type="primary" @click="handleRegister" native-type="button">注册</el-button>
   </template>
 </el-dialog>
-  </div>
+</div>
 </template>
 
 <script setup>

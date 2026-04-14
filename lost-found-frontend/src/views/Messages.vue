@@ -119,8 +119,8 @@ const loadMessages = async () => {
     // 修改这里：去掉 .data
     if (Array.isArray(res)) {
       messageList.value = res
-    } else if (res?.data && Array.isArray(res.data)) {
-      messageList.value = res.data
+    } else if (res?.data && Array.isArray(res)) {
+      messageList.value = res
     } else {
       messageList.value = []
     }
@@ -136,7 +136,7 @@ const loadUnreadCount = async () => {
   if (typeof res === 'number') {
     unreadCount.value = res
   } else if (res?.data !== undefined) {
-    unreadCount.value = res.data
+    unreadCount.value = res
   } else {
     unreadCount.value = 0
   }

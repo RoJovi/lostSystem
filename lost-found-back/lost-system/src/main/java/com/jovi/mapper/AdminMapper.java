@@ -1,13 +1,10 @@
 package com.jovi.mapper;
 
 import com.jovi.pojo.Admin;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 @Mapper
-public interface AdminMappper {
+public interface AdminMapper {
     // 用工号和密码查询管理员信息
     @Select("SELECT id, admin_num, name FROM admin WHERE admin_num = #{adminNum} AND password = #{password}")
     Admin selectByAdminNumAndPassword(Admin admin);
@@ -23,4 +20,12 @@ public interface AdminMappper {
 
     @Select("SELECT COUNT(*) FROM admin WHERE admin_num = #{adminNum} ")
     int SelectByAdminNum(String adminNum);
+
+    // 根据ID和密码查询（验证原密码）
+    @Select("SELECT * FROM admin WHERE id = #{id} AND password = #{password}")
+    Admin selectByIdAndPassword(@Param("id") Integer id, @Param("password") String password);
+
+    // 更新密码
+    @Update("UPDATE admin SET password = #{newPassword} WHERE id = #{id}")
+    void updatePassword(@Param("id") Integer id, @Param("newPassword") String newPassword);
 }

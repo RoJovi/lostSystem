@@ -4,6 +4,7 @@ import com.jovi.pojo.Post;
 import com.jovi.pojo.TopRequest;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -26,4 +27,20 @@ public interface TopRequestMapper {
     // 检查是否已有待审批的置顶申请
     @Select("SELECT COUNT(*) FROM top_request WHERE item_id = #{itemId} AND item_type = #{itemType} AND status = 0")
     int checkPendingRequest(@Param("itemId") Integer itemId, @Param("itemType") Integer itemType);
+
+    @Select("SELECT COUNT(*) FROM top_request WHERE status = #{status}")
+    int countByStatus(Integer status);
+
+    @Select("SELECT * FROM top_request WHERE status = #{status}")
+    List<TopRequest> selectByStatus(Integer status);
+
+    @Select("SELECT * FROM top_request ORDER BY create_time DESC")
+    List<TopRequest> selectAll();
+
+    @Select("SELECT * FROM top_request WHERE id = #{id}")
+    TopRequest selectById(Integer id);
+
+    @Update("UPDATE top_request SET status = #{status}, approve_time = #{approveTime} WHERE id = #{id}")
+    int updateStatus(@Param("id") Integer id, @Param("status") Integer status, @Param("approveTime") LocalDateTime approveTime);
+
 }

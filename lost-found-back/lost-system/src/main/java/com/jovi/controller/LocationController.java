@@ -19,18 +19,27 @@ public class LocationController {
     @Autowired
     private LocationService locationService;
 
-    //获得地点
+    /**
+     * 获取地点列表（树形结构）
+     */
     @GetMapping("/locations")
     public Result getLocations() {
         log.info("获取地点列表");
-        List<Location> list = locationService.getTreeList();
+        List<LocationVO> list = locationService.getTreeList();
         return Result.success(list);
     }
 
-    //自定义地点
+    /**
+     * 添加自定义地点
+     */
     @PostMapping("/location")
     public Result addLocation(@RequestBody AddLocationRequest request,
-                              @RequestAttribute("userId") Integer userId) {
+                              HttpServletRequest httpRequest) {
+        Integer userId = (Integer) httpRequest.getAttribute("userId");
+        if (userId == null) {
+            return Result.error("未登录");
+        }
+
         log.info("用户 {} 添加自定义地点: {}", userId, request.getName());
 
         Integer id = locationService.addLocation(request.getName(), request.getParentId(), userId);

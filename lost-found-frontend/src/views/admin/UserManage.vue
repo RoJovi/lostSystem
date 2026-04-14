@@ -150,8 +150,8 @@ const loadUsers = async () => {
     const res = await getAllUsers()
     if (Array.isArray(res)) {
       userList.value = res
-    } else if (res?.data && Array.isArray(res.data)) {
-      userList.value = res.data
+    } else if (res?.data && Array.isArray(res)) {
+      userList.value = res
     } else {
       userList.value = []
     }
