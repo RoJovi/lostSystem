@@ -45,6 +45,10 @@ public class AdminServiceImpl implements AdminService {
     public LoginAdmin login(Admin admin) {
         Admin a = adminMapper.selectByAdminNumAndPassword(admin);
 
+        if (a == null) {
+            return null;
+        }
+
         // token自定义信息
         Map<String, Object> dataMap = new HashMap<>();
         dataMap.put("userId", a.getId());
