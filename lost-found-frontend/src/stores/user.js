@@ -3,13 +3,25 @@ import { ref } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
     const userInfo = ref(null)
-    const userType = ref(null) // 0-普通用户 1-管理员
+    const userType = ref(null)
     const token = ref(localStorage.getItem('token') || '')
     
+    // 初始化时从 localStorage 恢复 userInfo
+    const savedUserInfo = localStorage.getItem('userInfo')
+    if (savedUserInfo) {
+        try {
+            userInfo.value = JSON.parse(savedUserInfo)
+        } catch (e) {}
+    }
+    
+    // 恢复 userType
+    const savedType = localStorage.getItem('userType')
+    if (savedType !== null) {
+        userType.value = parseInt(savedType)
+    }
+    
     function setUser(data) {
-        // 根据是否有 adminNum 判断是管理员还是普通用户
         if (data.adminNum !== undefined) {
-            // 管理员
             userInfo.value = {
                 id: data.id,
                 adminNum: data.adminNum,
@@ -18,7 +30,6 @@ export const useUserStore = defineStore('user', () => {
             }
             userType.value = 1
         } else {
-            // 普通用户
             userInfo.value = {
                 id: data.id,
                 nickname: data.nickname,
@@ -31,6 +42,8 @@ export const useUserStore = defineStore('user', () => {
         token.value = data.token
         localStorage.setItem('token', data.token)
         localStorage.setItem('userType', userType.value)
+        localStorage.setItem('userId', data.id)
+        localStorage.setItem('userInfo', JSON.stringify(userInfo.value))  // 添加这一行
     }
     
     function logout() {
@@ -39,12 +52,8 @@ export const useUserStore = defineStore('user', () => {
         token.value = ''
         localStorage.removeItem('token')
         localStorage.removeItem('userType')
-    }
-    
-    // 页面刷新时从 localStorage 恢复用户类型
-    const savedType = localStorage.getItem('userType')
-    if (savedType !== null) {
-        userType.value = parseInt(savedType)
+        localStorage.removeItem('userId')
+        localStorage.removeItem('userInfo')
     }
     
     return { userInfo, userType, token, setUser, logout }
