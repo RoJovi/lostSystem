@@ -35,32 +35,36 @@
 
       <div class="message-list" v-loading="loading">
         <div 
-          v-for="msg in filteredMessages" 
-          :key="msg.id" 
-          class="message-item"
-          :class="{ unread: !msg.isRead }"
-          @click="handleMessageClick(msg)"
-        >
-          <div class="message-avatar" @click.stop="goToUserProfile(msg.fromUserId)">
-            <img :src="msg.fromUserAvatar || '/default-avatar.png'" />
-          </div>
-          <div class="message-content">
-            <div class="message-header">
-              <span class="from-user" @click.stop="goToUserProfile(msg.fromUserId)">
-                {{ msg.fromUserNickname || msg.fromUsername }}
-              </span>
-              <span class="message-type" :class="msg.type">
-                {{ msg.type === 'private' ? '私信' : '评论' }}
-              </span>
-              <span class="time">{{ formatTime(msg.createTime) }}</span>
-            </div>
-            <div class="message-preview">{{ msg.content }}</div>
-            <div v-if="msg.type === 'comment'" class="message-source">
-              来源：{{ msg.postTitle }}
-            </div>
-          </div>
-          <div v-if="!msg.isRead" class="unread-dot"></div>
-        </div>
+  v-for="msg in filteredMessages" 
+  :key="msg.id" 
+  class="message-item"
+  :class="{ unread: !msg.isRead }"
+  @click="handleMessageClick(msg)"
+>
+  <!-- 头像：我发的显示我的头像，对方发的显示对方的头像 -->
+  <div class="message-avatar" @click.stop="goToUserProfile(msg.fromUserId === currentUserId ? msg.toUserId : msg.fromUserId)">
+    <img :src="msg.fromUserId === currentUserId ? (userInfo?.avatar || '/default-avatar.png') : (msg.fromUserAvatar || '/default-avatar.png')" />
+  </div>
+  
+  <div class="message-content">
+    <div class="message-header">
+      <!-- 昵称：我发的显示"我"，对方发的显示对方昵称 -->
+      <span class="from-user" @click.stop="goToUserProfile(msg.fromUserId === currentUserId ? msg.toUserId : msg.fromUserId)">
+        <span v-if="msg.fromUserId === currentUserId">我</span>
+        <span v-else>{{ msg.fromUserNickname || '用户' }}</span>
+      </span>
+      <span class="message-type" :class="msg.type">
+        {{ msg.type === 'private' ? '私信' : '评论' }}
+      </span>
+      <span class="time">{{ formatTime(msg.createTime) }}</span>
+    </div>
+    <div class="message-preview">{{ msg.content }}</div>
+    <div v-if="msg.type === 'comment'" class="message-source">
+      来源：{{ msg.postTitle }}
+    </div>
+  </div>
+  <div v-if="!msg.isRead" class="unread-dot"></div>
+</div>
         <div v-if="filteredMessages.length === 0 && !loading" class="empty">
           暂无消息
         </div>
@@ -94,6 +98,7 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const userStore = useUserStore()
 const userInfo = userStore.userInfo
+const currentUserId = userStore.userInfo?.id;
 
 const loading = ref(false)
 const messageList = ref([])
@@ -119,8 +124,8 @@ const loadMessages = async () => {
     // 修改这里：去掉 .data
     if (Array.isArray(res)) {
       messageList.value = res
-    } else if (res?.data && Array.isArray(res)) {
-      messageList.value = res
+    } else if (res?.data && Array.isArray(res.data)) {
+      messageList.value = res.data
     } else {
       messageList.value = []
     }
@@ -131,31 +136,52 @@ const loadMessages = async () => {
 
 const loadUnreadCount = async () => {
   const res = await getUnreadCount()
-  console.log('未读消息数:', res)  // 调试
-  // 修改这里：兼容处理
+  console.log('未读消息数:', res)
+  
   if (typeof res === 'number') {
     unreadCount.value = res
   } else if (res?.data !== undefined) {
-    unreadCount.value = res
+    unreadCount.value = res.data
   } else {
     unreadCount.value = 0
   }
 }
+
 const handleMessageClick = async (msg) => {
   // 标记为已读
-  if (!msg.isRead) {
-    await markMessageRead(msg.id)
-    msg.isRead = true
-    await loadUnreadCount()
+  if (!msg.isRead && msg.toUserId === currentUserId) {
+    try {
+      await markMessageRead(msg.id)
+      msg.isRead = true
+      await loadUnreadCount()
+    } catch (e) {
+      console.log('标记已读失败:', e)
+    }
   }
   
   // 如果是私信，打开回复弹窗
   if (msg.type === 'private') {
-    currentReplyTo.value = msg.fromUserId
-    showReplyDialog.value = true
+    // 计算要回复给谁
+    let replyToUserId = null;
+    if (msg.fromUserId === currentUserId) {
+      // 这是我发的消息，对方是 toUserId
+      replyToUserId = msg.toUserId;
+    } else {
+      // 这是对方发的消息，回复给 fromUserId
+      replyToUserId = msg.fromUserId;
+    }
+    
+    // 不能回复自己
+    if (replyToUserId === currentUserId) {
+      ElMessage.warning('不能回复自己发送的消息');
+      return;
+    }
+    
+    currentReplyTo.value = replyToUserId;
+    showReplyDialog.value = true;
   } else {
     // 评论，跳转到帖子详情
-    router.push(`/post/${msg.postId}/${msg.postType}`)
+    router.push(`/post/${msg.postId}/${msg.postType}`);
   }
 }
 
