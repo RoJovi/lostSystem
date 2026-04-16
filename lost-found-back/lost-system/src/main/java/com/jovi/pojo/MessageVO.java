@@ -13,6 +13,7 @@ public class MessageVO {
     private Integer id;
     private String type;           // "private" 或 "comment"
     private Integer fromUserId;
+    private Integer toUserId;
     private String fromUserNickname;
     private String fromUserAvatar;
     private String content;
