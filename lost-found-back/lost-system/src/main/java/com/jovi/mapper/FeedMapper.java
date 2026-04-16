@@ -44,13 +44,15 @@ public interface FeedMapper {
             "    AND title LIKE CONCAT('%', #{keyword}, '%')" +
             "  </if>" +
             "  <if test='locationId != null'>" +
-            "    AND location_id = #{locationId}" +
+            "    AND location_id IN (" +
+            "      SELECT id FROM location WHERE id = #{locationId} OR parent_id = #{locationId}" +
+            "    )" +
             "  </if>" +
             ") AS feed " +
             "<if test='type != null and type != \"all\"'>" +
-            "  WHERE type = #{type}" +
+            "  WHERE type = CASE #{type} WHEN 'lost' THEN 0 WHEN 'found' THEN 1 END" +
             "</if>" +
-            "ORDER BY create_time ${sort}" +
+            "ORDER BY isTop DESC, create_time ${sort}" +
             "</script>")
     List<FeedPostVO> getFeedList(@Param("type") String type,
                                  @Param("keyword") String keyword,
