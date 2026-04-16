@@ -97,7 +97,7 @@
       <p class="warning">此操作将同时删除该用户的所有帖子和评论，且不可恢复！</p>
       <template #footer>
         <el-button @click="showDeleteDialog = false">取消</el-button>
-        <el-button type="danger" @click="deleteUser">确认删除</el-button>
+        <el-button type="danger" @click="deleteUserConfirm">确认删除</el-button>
       </template>
     </el-dialog>
   </div>
