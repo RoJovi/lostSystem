@@ -1,8 +1,6 @@
 package com.jovi.service.impl;
 
-import com.jovi.mapper.CommentMapper;
-import com.jovi.mapper.MessageMapper;
-import com.jovi.mapper.UserMapper;
+import com.jovi.mapper.*;
 import com.jovi.pojo.*;
 import com.jovi.service.CommentService;
 import com.jovi.service.MessageService;
@@ -25,6 +23,16 @@ public class MessageServiceImpl implements MessageService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private CommentMapper commentMapper;
+
+    @Autowired
+    private FoundItemMapper foundItemMapper;
+
+    @Autowired
+    private LostItemMapper lostItemMapper;
+
+
     @Override
     @Transactional
     public Integer sendMessage(Integer fromUserId, Integer toUserId, String content) {
@@ -46,29 +54,57 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<MessageVO> getMessageList(Integer userId) {
-        List<Message> messages = messageMapper.selectByUserId(userId);
         List<MessageVO> result = new ArrayList<>();
 
+        // 1. 查询私信
+        List<Message> messages = messageMapper.selectByUserId(userId);
         for (Message msg : messages) {
-            // 获取对方用户信息
-            Integer otherUserId = msg.getFromUserId().equals(userId) ? msg.getToUserId() : msg.getFromUserId();
-            User otherUser = userMapper.selectById(otherUserId);
+            // 获取发送者信息（不是对方）
+            User fromUser = userMapper.selectById(msg.getFromUserId());
 
             MessageVO vo = new MessageVO();
             vo.setId(msg.getId());
             vo.setType("private");
             vo.setFromUserId(msg.getFromUserId());
-            vo.setFromUserNickname(otherUser != null ? otherUser.getNickname() : "无名氏");
-            vo.setFromUserAvatar(otherUser != null ? otherUser.getAvatar() : "/default-avatar.png");
+            vo.setFromUserNickname(fromUser != null ? fromUser.getNickname() : "未知");
+            vo.setFromUserAvatar(fromUser != null ? fromUser.getAvatar() : "/default-avatar.png");
             vo.setContent(msg.getContent());
             vo.setIsRead(msg.getIsRead() == 1);
             vo.setCreateTime(msg.getCreateTime());
-
+            vo.setToUserId(msg.getToUserId());
             result.add(vo);
         }
 
+        // 查询评论（作为消息）
+        List<Comment> comments = commentMapper.selectCommentsOnMyPosts(userId);
+        for (Comment comment : comments) {
+            User commentUser = userMapper.selectById(comment.getUserId());
+
+            MessageVO vo = new MessageVO();
+            vo.setId(comment.getId());
+            vo.setType("comment");
+            vo.setFromUserId(comment.getUserId());
+            vo.setFromUserNickname(commentUser != null ? commentUser.getNickname() : "未知");
+            vo.setFromUserAvatar(commentUser != null ? commentUser.getAvatar() : "/default-avatar.png");
+            vo.setContent(comment.getContent());
+            vo.setIsRead(true);
+            vo.setCreateTime(comment.getCreateTime());
+            vo.setPostId(comment.getItemId());
+            vo.setPostType(comment.getItemType());
+
+            String title = comment.getItemType() == 0 ?
+                    lostItemMapper.selectTitleById(comment.getItemId()) :
+                    foundItemMapper.selectTitleById(comment.getItemId());
+            vo.setPostTitle(title);
+            result.add(vo);
+        }
+
+        // 按时间倒序排序
+        result.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
+
         return result;
     }
+
 
     @Override
     public Integer getUnreadCount(Integer userId) {
