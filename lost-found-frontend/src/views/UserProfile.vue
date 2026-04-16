@@ -119,7 +119,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { getUserInfo, getUserPosts, sendMessage, report, getMyPosts } from '@/api'
+import { getUserInfoById, getUserPosts, sendMessage, report } from '@/api'
 import { formatTime } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 
@@ -142,13 +142,15 @@ const userType = computed(() => userStore.userType)
 const isSelf = computed(() => currentUser.value?.id === userId.value)
 
 const loadTargetUser = async () => {
-  const res = await getUserInfo(userId.value)
-  targetUser.value = res.data
+  const res = await getUserInfoById(userId.value)
+  console.log('目标用户信息:', res)
+  targetUser.value = res
 }
 
 const loadUserPosts = async () => {
   const res = await getUserPosts(userId.value)
-  userPosts.value = res.data
+  console.log('用户帖子:', res)
+  userPosts.value = res
 }
 
 const sendMessageToUser = async () => {
