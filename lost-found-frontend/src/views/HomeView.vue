@@ -126,8 +126,8 @@ loading.value = true
     // 修改这里：去掉 .data
     if (Array.isArray(res)) {
       feedList.value = res
-    } else if (res?.data && Array.isArray(res.data)) {
-      feedList.value = res.data
+    } else if (res?.data && Array.isArray(res)) {
+      feedList.value = res
     } else {
       feedList.value = []
     }
@@ -143,7 +143,7 @@ const loadUnreadCount = async () => {
   if (typeof res === 'number') {
     unreadCount.value = res
   } else if (res?.data !== undefined) {
-    unreadCount.value = res.data
+    unreadCount.value = res
   } else {
     unreadCount.value = 0
   }
@@ -156,8 +156,8 @@ const loadLocations = async () => {
   // 后端已经返回平铺数组，直接赋值
   if (Array.isArray(res)) {
     locationTree.value = res
-  } else if (res?.data && Array.isArray(res.data)) {
-    locationTree.value = res.data
+  } else if (res?.data && Array.isArray(res)) {
+    locationTree.value = res
   } else {
     locationTree.value = []
   }
