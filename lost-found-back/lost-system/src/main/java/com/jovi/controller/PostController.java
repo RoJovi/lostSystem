@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,11 +35,7 @@ public class PostController {
         }
 
         List<Post> list = postService.getAll(userId);
-        if (list.isEmpty()) {
-            return Result.error("查无此帖");
-        }
-
-        return Result.success(list);
+        return Result.success(list != null ? list : new ArrayList<>());
 
     }
 
@@ -49,16 +46,11 @@ public class PostController {
             return Result.error("未登录");
         }
         List<Post> list = postService.getAll(userId);
-        if (list.isEmpty()) {
-            return Result.error("查无此帖");
-        }
-
-        return Result.success(list);
-
+        return Result.success(list != null ? list : new ArrayList<>());
     }
 
     //删帖
-    @DeleteMapping("/post//{type}/{id}")
+    @DeleteMapping("/post/{type}/{id}")
     public Result deletePost(@PathVariable String type,
                              @PathVariable Integer id,
                              @RequestAttribute("userId") Integer userId) {
@@ -106,5 +98,4 @@ public class PostController {
 
         return Result.success(null);
     }
-
 }
