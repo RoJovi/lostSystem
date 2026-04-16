@@ -49,8 +49,9 @@ public interface UserMapper {
     @Select("SELECT * FROM user ORDER BY create_time DESC")
     List<User> selectAll();
 
-    void updateStatus(Integer userId, Integer status);
-
+    @Update("UPDATE user SET status = #{status} WHERE id = #{userId}")
+    void updateStatus(@Param("userId") Integer userId, @Param("status") Integer status);
+    
     @Select("SELECT COUNT(*) FROM user")
     int countAll();
 
