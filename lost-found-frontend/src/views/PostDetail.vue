@@ -29,41 +29,46 @@
           <span class="author-name">{{ post.userNickname || post.username }}</span>
         </div>
         <!-- 右上角三点菜单 -->
-        <el-dropdown trigger="click" @command="handleMenuCommand">
-          <span class="more-btn">⋮</span>
-          <template #dropdown>
-            <el-dropdown-menu>
-		<!-- 管理员：只有删除 -->
-    	  <template v-if="isAdmin">
-     	   <el-dropdown-item command="delete">🗑️ 删除</el-dropdown-item>
-      	    </template>
+<el-dropdown trigger="click" @command="handleMenuCommand">
+  <span class="more-btn">⋮</span>
+  <template #dropdown>
+    <el-dropdown-menu>
+      <!-- 管理员：只有删除 -->
+      <template v-if="isAdmin">
+        <el-dropdown-item command="delete">🗑️ 删除</el-dropdown-item>
+      </template>
 
-              <!-- 自己的帖子 -->
-              <template v-if="isMyPost">
-                <el-dropdown-item command="edit">✏️ 修改</el-dropdown-item>
-                <el-dropdown-item command="delete">🗑️ 删除</el-dropdown-item>
-                <el-dropdown-item 
-                  v-if="post.status === 0" 
-                  command="resolve"
-                >
-                  {{ post.type === 0 ? '✅ 设置为已找回' : '✅ 设置为已归还' }}
-                </el-dropdown-item>
-                <el-dropdown-item 
-                  v-if="post.status !== 0" 
-                  command="resolve" 
-                  disabled
-                >
-                  {{ post.type === 0 ? '已找回' : '已归还' }}
-                </el-dropdown-item>
-                <el-dropdown-item command="top">📌 申请置顶</el-dropdown-item>
-              </template>
-              <!-- 别人的帖子 -->
-              <template v-else>
-                <el-dropdown-item command="report">🚨 举报</el-dropdown-item>
-              </template>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+      <!-- 自己的帖子 -->
+      <template v-else-if="isMyPost">
+        <el-dropdown-item command="edit">✏️ 修改</el-dropdown-item>
+        <el-dropdown-item command="delete">🗑️ 删除</el-dropdown-item>
+        
+        <el-dropdown-item v-if="post.status === 0" command="resolve">
+          {{ post.type === 0 ? '✅ 设置为已找回' : '✅ 设置为已归还' }}
+        </el-dropdown-item>
+        <el-dropdown-item v-else command="resolve" disabled>
+          {{ post.type === 0 ? '已找回' : '已归还' }}
+        </el-dropdown-item>
+        
+ <el-dropdown-item v-if="post.status === 0 && post.type === 0" command="top">
+    📌 申请置顶
+  </el-dropdown-item>
+  <el-dropdown-item v-else-if="post.type === 1" command="top" disabled>
+    📌 拾物不可置顶
+  </el-dropdown-item>
+  <el-dropdown-item v-else command="top" disabled>
+    📌 已找回不可置顶
+  </el-dropdown-item>
+</template>
+
+      <!-- 别人的帖子 -->
+      <template v-else>
+        <el-dropdown-item command="report">🚨 举报</el-dropdown-item>
+      </template>
+    </el-dropdown-menu>
+  </template>
+</el-dropdown>
+
       </div>
 
       <!-- 图片 -->
@@ -124,14 +129,14 @@
           <el-input v-model="editForm.title" />
         </el-form-item>
         <el-form-item label="地点" required>
-          <el-select v-model="editForm.locationId" placeholder="请选择地点">
-            <el-option
-              v-for="loc in locationTree"
-              :key="loc.id"
-              :label="loc.name"
-              :value="loc.id"
-            />
-          </el-select>
+  <el-cascader
+    v-model="editForm.locationId"
+    :options="locationTree"
+    :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true }"
+    placeholder="请选择地点"
+    clearable
+    style="width: 100%"
+  />
         </el-form-item>
         <el-form-item label="时间" required>
           <el-date-picker
@@ -198,9 +203,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/user' 
 import { 
   getLostDetail, getFoundDetail, deletePost, updatePost, setResolved,
   getComments, addComment, report, requestTop, getLocations
@@ -248,7 +253,7 @@ const reportForm = ref({
 })
 
 // 计算属性
-const isMyPost = () => post.value && post.value.userId === userStore.userInfo?.id
+const isMyPost = computed(() => post.value && post.value.userId === userStore.userInfo?.id)
 
 const loadPost = async () => {
   loading.value = true
@@ -272,7 +277,7 @@ const loadComments = async () => {
   if (Array.isArray(res)) {
     commentList.value = res
   } else if (res?.data && Array.isArray(res.data)) {
-    commentList.value = res.data
+    commentList.value = res
   } else {
     commentList.value = []
   }
@@ -284,7 +289,7 @@ const loadLocations = async () => {
   if (Array.isArray(res)) {
     locationTree.value = res
   } else if (res?.data && Array.isArray(res.data)) {
-    locationTree.value = res.data
+    locationTree.value = res
   } else {
     locationTree.value = []
   }
@@ -338,7 +343,45 @@ switch (command) {
   }
 }
 
-const openEditDialog = () => {
+// 平铺地点列表（用于下拉框）
+const flatLocationTree = computed(() => {
+  const flatten = (items, result = []) => {
+    if (!items) return result
+    items.forEach(item => {
+      result.push({ id: item.id, name: item.name })
+      if (item.children && item.children.length) {
+        flatten(item.children, result)
+      }
+    })
+    return result
+  }
+  return flatten(locationTree.value)
+})
+
+const findPath = (tree, targetId, path = []) => {
+  if (!tree) return null
+  for (const node of tree) {
+    const newPath = [...path, node.id]
+    if (node.id === targetId) {
+      return newPath
+    }
+    if (node.children && node.children.length) {
+      const result = findPath(node.children, targetId, newPath)
+      if (result) return result
+    }
+  }
+  return null
+}
+
+const openEditDialog = async () => {
+if (locationTree.value.length === 0) {
+    await loadLocations()
+  }
+let locationIdArray = null
+  if (post.value.locationId) {
+    locationIdArray = findPath(locationTree.value, post.value.locationId)
+  }
+  console.log('locationTree:', locationTree.value)
   editForm.value = {
     title: post.value.title,
     locationId: post.value.locationId,
@@ -348,15 +391,22 @@ const openEditDialog = () => {
   showEditDialog.value = true
 }
 
+
 const submitEdit = async () => {
   try {
+	// 处理级联选择器的返回值
+    let locationId = editForm.value.locationId
+    if (Array.isArray(locationId)) {
+      locationId = locationId[locationId.length - 1]  // 取最后一个（叶子节点）
+    }
     const data = {
       title: editForm.value.title,
       locationId: editForm.value.locationId,
       time: editForm.value.time,
       description: editForm.value.description
     }
-    await updatePost(postId.value, postType.value, data)
+    const typeStr = postType.value === 0 ? 'lost' : 'found'
+    await updatePost(postId.value, typeStr,data)
     ElMessage.success('修改成功')
     showEditDialog.value = false
     loadPost()
@@ -371,14 +421,16 @@ const handleDelete = async () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
-    await deletePost(postId.value, postType.value)
+    const typeStr = postType.value === 0 ? 'lost' : 'found'
+    await deletePost(postId.value, typeStr)
     ElMessage.success('删除成功')
     router.back()
   }).catch(() => {})
 }
 
 const handleResolve = async () => {
-  await setResolved(postId.value, postType.value)
+  const typeStr = postType.value === 0 ? 'lost' : 'found'
+  await setResolved(postId.value, typeStr)
   ElMessage.success(postType.value === 0 ? '已标记为已找回' : '已标记为已归还')
   loadPost()
 }
@@ -430,6 +482,14 @@ onMounted(() => {
   loadPost()
   loadComments()
   loadLocations()
+
+// 调试权限
+  setTimeout(() => {
+    console.log('=== 权限调试 ===')
+    console.log('post.userId:', post.value?.userId)
+    console.log('currentUserId:', userStore.userInfo?.id)
+    console.log('isMyPost:', isMyPost.value)
+  }, 1000)
 })
 </script>
 
