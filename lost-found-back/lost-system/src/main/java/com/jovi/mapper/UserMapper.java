@@ -60,4 +60,10 @@ public interface UserMapper {
 
     @Delete("DELETE FROM user WHERE id = #{id}")
     int deleteById(Integer id);
+
+    @Update("UPDATE user SET post_count = post_count + 1 WHERE id = #{userId}")
+    void incrementPostCount(Integer userId);
+
+    @Update("UPDATE user SET post_count = post_count - 1 WHERE id = #{userId} AND post_count > 0")
+    void decrementPostCount(Integer userId);
 }
