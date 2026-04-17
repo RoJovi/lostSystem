@@ -106,8 +106,6 @@ public class UserController {
         user.setPassword(null);
         user.setPhone(null);
         user.setEmail(null);
-        user.setStatus(null);
-        user.setIsActive(null);
         return Result.success(user);
 
     }
