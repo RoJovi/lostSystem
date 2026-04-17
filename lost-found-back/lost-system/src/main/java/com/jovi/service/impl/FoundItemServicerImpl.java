@@ -83,6 +83,8 @@ public class FoundItemServicerImpl implements FoundItemService {
 
         foundItemMapper.insert(item);
 
+        userMapper.incrementPostCount(userId);
+
         log.info("用户 {} 发布了失物帖子，ID: {}", userId, item.getId());
 
         return item;
