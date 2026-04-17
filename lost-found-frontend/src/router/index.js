@@ -100,7 +100,12 @@ router.beforeEach((to, from, next) => {
     if (userStore.userType === null && userType !== null) {
         userStore.userType = parseInt(userType)
     }
-    
+
+    if (userStore.userType === 1 && (to.path === '/my-posts' || to.path === '/messages')) {
+        next('/admin')
+        return
+    }
+
     if (to.meta.requiresAuth) {
         if (!token) {
             next('/login')
