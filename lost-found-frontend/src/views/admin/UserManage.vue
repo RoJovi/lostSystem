@@ -47,7 +47,7 @@
 
       <!-- 用户列表 -->
       <div class="user-list" v-loading="loading">
-        <div v-for="user in filteredUsers" :key="user.id" class="user-card">
+        <div v-for="user in filteredUsers" :key="user.id" class="user-card" @click="goToUserProfile(user.id)">
           <div class="user-avatar">
             <img :src="user.avatar || '/default-avatar.png'" />
           </div>
@@ -60,13 +60,13 @@
               <span>📧 {{ user.email }}</span>
               <span v-if="user.phone">📱 {{ user.phone }}</span>
             </div>
-            <div class="user-stats">
-              <span>📝 {{ user.post_count }} 篇帖子</span>
-              <span>💬 {{ user.comment_count }} 条评论</span>
-              <span>🕐 注册于 {{ formatDate(user.createTime) }}</span>
-            </div>
+<div class="user-stats">
+<span>📝 {{ user.postCount || 0 }} 篇帖子</span>
+<span>💬 {{ user.commentCount || 0 }} 条评论</span>
+  <span>🕐 注册于 {{ formatDate(user.createTime) }}</span>
+</div>
           </div>
-          <div class="user-actions">
+          <div class="user-actions" @click.stop>
             <span class="user-status" :class="user.status === 1 ? 'active' : 'banned'">
               {{ user.status === 1 ? '正常' : '已封禁' }}
             </span>
@@ -113,6 +113,10 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const userStore = useUserStore()
 
+const goToUserProfile = (userId) => {
+  router.push(`/user/${userId}`)
+}
+
 const adminInfo = ref(userStore.userInfo)
 const showDropdown = ref(false)
 const loading = ref(false)
@@ -125,12 +129,12 @@ const deleteTarget = ref(null)
 const filteredUsers = computed(() => {
   let result = userList.value
   
-  // 按活跃度筛选
-  if (userFilter.value === 'active') {
-    result = result.filter(u => u.post_count + u.comment_count >= 5)
-  } else if (userFilter.value === 'inactive') {
-    result = result.filter(u => u.post_count + u.comment_count === 0)
-  }
+// 按活跃度筛选
+if (userFilter.value === 'active') {
+  result = result.filter(u => (u.postCount || 0) + (u.commentCount || 0) >= 5)
+} else if (userFilter.value === 'inactive') {
+  result = result.filter(u => (u.postCount || 0) + (u.commentCount || 0) === 0)
+}
   
   // 按关键词搜索
   if (searchKeyword.value) {
