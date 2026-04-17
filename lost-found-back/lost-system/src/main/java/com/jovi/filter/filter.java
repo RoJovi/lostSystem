@@ -79,6 +79,14 @@ public class filter implements Filter {
                 return;
             }*/
 
+            // 发布帖子接口
+            if (requestURI.contains("/lost/create") || requestURI.contains("/found/create") || requestURI.contains("my-posts") || requestURI.contains("/messages")) {
+                if (userType != 0) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            }
+
 
             // 存入 request，供 Controller 使用
             request.setAttribute("userId", userId);
