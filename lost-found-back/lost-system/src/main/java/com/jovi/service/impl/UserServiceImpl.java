@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
     public boolean checkId(String email,String phone) {
         int find1 = userMapper.SelectByEmail(email);
         int find2 = userMapper.SelectByPhone(phone);
-        return (find1 != 0 && find2 != 0);
+        return (find1 != 0 || find2 != 0);
     }
 
     @Override
