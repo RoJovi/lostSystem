@@ -1,6 +1,7 @@
 package com.jovi.controller;
 
 import com.jovi.pojo.*;
+import com.jovi.service.AIService;
 import com.jovi.service.AdminService;
 import com.jovi.service.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,9 @@ public class AdminController {
 
     @Autowired
     private ReportService reportService;
+
+    @Autowired
+    private AIService aiService;
 
 
     // 用id查询管理员信息
@@ -171,5 +175,28 @@ public class AdminController {
         log.info("管理员获取统计数据");
         StatisticsVO stats = adminService.getStatistics();
         return Result.success(stats);
+    }
+
+    // AdminController.java 中添加
+
+    /**
+     * AI 统计分析 - 失物高发区域、热门丢失物品
+     */
+    @GetMapping("/ai/statistics")
+    public Result getAIStatistics() {
+        log.info("管理员请求AI统计分析");
+
+        // 获取统计数据
+        StatisticsVO stats = adminService.getStatistics();
+
+        String prompt = String.format(
+                "基于以下数据生成一段100字左右的失物招领分析报告：总帖子数%d，丢失帖子%d，拾取帖子%d，已找回%d。" +
+                        "高发区域：%s。请分析哪个区域失物最多，哪种物品丢失最多，并给出建议。",
+                stats.getTotalPosts(), stats.getTotalLost(), stats.getTotalFound(),
+                stats.getTotalResolved(), stats.getTopLocations()
+        );
+
+        String analysis = aiService.analyzeStatistics(prompt);
+        return Result.success(analysis);
     }
 }
