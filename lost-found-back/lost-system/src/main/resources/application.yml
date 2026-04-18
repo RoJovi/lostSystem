@@ -1,6 +1,6 @@
 spring:
   application:
-    name: dormitory-repair-system
+    name: lost-found-system
   #配置数据库连接信息
   datasource:
     url: jdbc:mysql://localhost:3306/lost_system
@@ -15,6 +15,16 @@ spring:
 
 #Mybatis相关配置
 mybatis:
+  mapper-locations: classpath:mapper/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
+
+#AI配置文件
+ai:
+  api:
+    url: https://www.dmxapi.cn/v1/chat/completions
+    key: sk-xVKVbR4DbFLQydFpofPzuXnVuwuxrrIZVp1vsAm3zXjqrXbh
+    model: qwen-flash-free
+    max-tokens: 200
+    temperature: 0.7
