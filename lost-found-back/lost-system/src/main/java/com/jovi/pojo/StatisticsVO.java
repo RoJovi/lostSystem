@@ -19,5 +19,7 @@ public class StatisticsVO {
     private Integer pendingReports;    // 待处理举报数
     private Integer pendingTopRequests;// 待审批置顶申请数
     private Integer activeUsers;       // 活跃用户数
+    private Integer activeUsersLast7Days;
+    private Integer activeUsersLast30Days;
     private List<Map<String, Object>> topLocations; // 失物高发区域TOP5
 }
