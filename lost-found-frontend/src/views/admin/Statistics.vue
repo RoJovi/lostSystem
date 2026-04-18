@@ -45,15 +45,10 @@
           <div class="stat-label">已找回/已归还</div>
         </div>
       </div>
-<!-- 新增：活跃用户时间段卡片 -->
 <div class="stats-grid" style="margin-top: 20px;">
   <div class="stat-card">
-    <div class="stat-value">{{ stats.activeUsersLast7Days || 0 }}</div>
-    <div class="stat-label">近7天活跃用户</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-value">{{ stats.activeUsersLast30Days || 0 }}</div>
-    <div class="stat-label">近30天活跃用户</div>
+    <div class="stat-value">{{ stats.activeUsers || 0 }}</div>
+    <div class="stat-label">活跃用户（近30天）</div>
   </div>
   <div class="stat-card">
     <div class="stat-value">{{ stats.totalUsers || 0 }}</div>
@@ -63,8 +58,12 @@
     <div class="stat-value">{{ stats.pendingReports || 0 }}</div>
     <div class="stat-label">待处理举报</div>
   </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.pendingTopRequests || 0 }}</div>
+    <div class="stat-label">待审批置顶</div>
+  </div>
 </div>
-      <!-- 图表区域 -->
+    <!-- 图表区域 -->
       <div class="chart-row">
         <div class="chart-card">
           <h3>帖子类型分布</h3>

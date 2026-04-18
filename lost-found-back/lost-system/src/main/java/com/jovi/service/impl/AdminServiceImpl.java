@@ -107,20 +107,6 @@ public class AdminServiceImpl implements AdminService {
         return users.stream().map(this::convertToAdminVO).collect(Collectors.toList());
     }
 
-    private UserForAdminVO convertToAdminVO(User user) {
-        UserForAdminVO vo = new UserForAdminVO();
-        vo.setId(user.getId());
-        vo.setNickname(user.getNickname());
-        vo.setEmail(user.getEmail());
-        vo.setPhone(user.getPhone());
-        vo.setAvatar(user.getAvatar());
-        vo.setStatus(user.getStatus());
-        vo.setPostCount(user.getPostCount());
-        vo.setCommentCount(user.getCommentCount());
-        vo.setCreateTime(user.getCreateTime());
-        return vo;
-    }
-
     @Override
     public void banUser(Integer userId, Integer status) {
         userMapper.updateStatus(userId, status);
@@ -204,10 +190,7 @@ public class AdminServiceImpl implements AdminService {
         stats.setTotalUsers(userMapper.countAll());
 
         // 活跃用户数（发帖+评论 >= 5）
-        stats.setActiveUsers(userMapper.countActive());
-        LocalDateTime now = LocalDateTime.now();
-        stats.setActiveUsersLast7Days(userMapper.countActiveUsersByTime(now.minusDays(7)));
-        stats.setActiveUsersLast30Days(userMapper.countActiveUsersByTime(now.minusDays(30)));
+        stats.setActiveUsers(userMapper.countActiveUsers());
         // 失物统计
         stats.setTotalLost(lostItemMapper.countAll());
         stats.setTotalFound(foundItemMapper.countAll());
@@ -247,4 +230,18 @@ public class AdminServiceImpl implements AdminService {
         return true;
     }
 
+    private UserForAdminVO convertToAdminVO(User user) {
+        UserForAdminVO vo = new UserForAdminVO();
+        vo.setId(user.getId());
+        vo.setNickname(user.getNickname());
+        vo.setEmail(user.getEmail());
+        vo.setPhone(user.getPhone());
+        vo.setAvatar(user.getAvatar());
+        vo.setStatus(user.getStatus());
+        vo.setPostCount(user.getPostCount());
+        vo.setCommentCount(user.getCommentCount());
+        vo.setCreateTime(user.getCreateTime());
+        vo.setIsActive(user.getIsActive());  // 使用 isActive
+        return vo;
+    }
 }

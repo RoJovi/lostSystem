@@ -129,11 +129,11 @@ const deleteTarget = ref(null)
 const filteredUsers = computed(() => {
   let result = userList.value
   
-// 按活跃度筛选
+// 按活跃度筛选（近30天有活动）
 if (userFilter.value === 'active') {
-  result = result.filter(u => (u.postCount || 0) + (u.commentCount || 0) >= 5)
+  result = result.filter(u => u.isActive === 1)
 } else if (userFilter.value === 'inactive') {
-  result = result.filter(u => (u.postCount || 0) + (u.commentCount || 0) === 0)
+  result = result.filter(u => u.isActive === 0 || u.isActive === null)
 }
   
   // 按关键词搜索

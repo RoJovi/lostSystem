@@ -29,7 +29,7 @@
         <div class="profile-info">
           <div class="profile-name">
             {{ targetUser?.nickname || targetUser?.username }}
-            <span class="user-type" v-if="(targetUser?.postCount + targetUser?.commentCount) >= 5">🌟 活跃用户</span>
+            <span class="user-type" v-if="targetUser?.isActive === 1">🌟 活跃用户</span>
 	<span v-if="targetUser?.status === 0" class="user-status-badge banned">已封禁</span>
           </div>
           <div class="profile-stats">

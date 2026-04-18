@@ -16,6 +16,7 @@ public class UserForAdminVO {
     private String phone;
     private String avatar;
     private Integer status;        // 1-正常 0-封禁
+    private Integer isActive;  // 近期是否活跃
     private Integer postCount;
     private Integer commentCount;
     private LocalDateTime createTime;
