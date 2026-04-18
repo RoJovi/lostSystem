@@ -5,9 +5,9 @@ import org.apache.ibatis.annotations.*;
 
 @Mapper
 public interface AdminMapper {
-    // 用工号和密码查询管理员信息
-    @Select("SELECT id, admin_num, name FROM admin WHERE admin_num = #{adminNum} AND password = #{password}")
-    Admin selectByAdminNumAndPassword(Admin admin);
+    // 用工号查询管理员信息
+    @Select("SELECT * FROM admin WHERE admin_num = #{adminNum}")
+    Admin selectByAdminNum(Admin admin);
     // 用id查询管理员信息
     @Select("SELECT * FROM admin WHERE id = #{id}")
     Admin selectById(Integer id);
@@ -21,9 +21,9 @@ public interface AdminMapper {
     @Select("SELECT COUNT(*) FROM admin WHERE admin_num = #{adminNum} ")
     int SelectByAdminNum(String adminNum);
 
-    // 根据ID和密码查询（验证原密码）
-    @Select("SELECT * FROM admin WHERE id = #{id} AND password = #{password}")
-    Admin selectByIdAndPassword(@Param("id") Integer id, @Param("password") String password);
+    // 根据ID查询密码
+    @Select("SELECT * FROM admin WHERE id = #{id} ")
+    Admin selectPasswordById(@Param("id") Integer id);
 
     // 更新密码
     @Update("UPDATE admin SET password = #{newPassword} WHERE id = #{id}")

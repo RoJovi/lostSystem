@@ -5,17 +5,18 @@ import com.jovi.pojo.OldAndNewPassword;
 import com.jovi.pojo.User;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
 public interface UserMapper {
-    //用手机号和密码换信息
-    @Select("SELECT id, nickname, email,phone,avatar FROM user WHERE phone = #{account} AND password = #{password}")
-    User selectByPhoneAndPassword(LoginUserDTO loginUserDTO) ;
+    //用手机号换信息
+    @Select("SELECT * FROM user WHERE phone = #{account}")
+    User selectByPhone(String phone) ;
 
-    //用邮箱和密码换信息
-    @Select("SELECT id, nickname, email,phone,avatar FROM user WHERE email = #{account} AND password = #{password}")
-    User selectByEmailAndPassword(LoginUserDTO loginUserDTO) ;
+    //用邮箱换信息
+    @Select("SELECT * FROM user WHERE email = #{account}")
+    User selectByEmail(String email) ;
 
     //用id换基本信息，查询回显
     @Select("SELECT * FROM user WHERE id = #{id} ")
@@ -36,7 +37,7 @@ public interface UserMapper {
     @Select("SELECT COUNT(*) FROM user WHERE phone = #{phone} ")
     int SelectByPhone(String phone);
 
-    @Update("UPDATE user SET password = #{newPassword}, update_time = NOW() WHERE id = #{id} AND password = #{oldPassword} ")
+    @Update("UPDATE user SET password = #{newPassword}, update_time = NOW() WHERE id = #{userId}  ")
     int updatePassword(OldAndNewPassword oldAndNewPassword);
 
     // 增加评论计数
@@ -66,4 +67,16 @@ public interface UserMapper {
 
     @Update("UPDATE user SET post_count = post_count - 1 WHERE id = #{userId} AND post_count > 0")
     void decrementPostCount(Integer userId);
+
+    // 查询指定时间段内活跃的用户（发帖+评论 >= 5）
+    @Select("SELECT COUNT(*) FROM (" +
+            "SELECT u.id FROM user u " +
+            "LEFT JOIN lost_item l ON u.id = l.user_id AND l.create_time >= #{startTime} " +
+            "LEFT JOIN found_item f ON u.id = f.user_id AND f.create_time >= #{startTime} " +
+            "LEFT JOIN comment c ON u.id = c.user_id AND c.create_time >= #{startTime} " +
+            "WHERE l.id IS NOT NULL OR f.id IS NOT NULL OR c.id IS NOT NULL " +
+            "GROUP BY u.id " +
+            "HAVING COUNT(DISTINCT l.id) + COUNT(DISTINCT f.id) + COUNT(DISTINCT c.id) >= 5" +
+            ") AS active_users")
+    int countActiveUsersByTime(LocalDateTime startTime);
 }

@@ -7,6 +7,7 @@ import com.jovi.pojo.OldAndNewPassword;
 import com.jovi.pojo.User;
 import com.jovi.service.UserService;
 import com.jovi.utils.JwtUtils;
+import com.jovi.utils.PasswordEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,18 +23,24 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     //登录
     @Override
     public LoginUser login(LoginUserDTO loginUserDTO) {
-        //先用手机号判断，后用邮箱判断
-        User user = userMapper.selectByPhoneAndPassword(loginUserDTO);
+        //1.先用手机号判断，后用邮箱判断
+        User user = userMapper.selectByPhone(loginUserDTO.getAccount());
         if(user == null){
-            user = userMapper.selectByEmailAndPassword(loginUserDTO);
+            user = userMapper.selectByEmail(loginUserDTO.getAccount());
         }
 
-        log.info("活到拿到token了吗？");
-
         if(user == null) {
+            return null;
+        }
+
+        // 2. 验证密码（明文 vs 密文）
+        if (!passwordEncoder.matches(loginUserDTO.getPassword(), user.getPassword())) {
             return null;
         }
 
@@ -64,6 +71,7 @@ public class UserServiceImpl implements UserService {
     public void register(User user) {
         user.setUpdateTime(LocalDateTime.now());
         user.setCreateTime(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userMapper.insertNumAndPassword(user);
     }
 
@@ -74,9 +82,44 @@ public class UserServiceImpl implements UserService {
         return (find1 != 0 || find2 != 0);
     }
 
+    //改密码，检查密文
     @Override
     public boolean updatePassword(OldAndNewPassword oldAndNewPassword) {
-        return userMapper.updatePassword(oldAndNewPassword)!=0;
+        // 1. 先根据用户ID查询当前用户信息
+        User user = userMapper.selectById(oldAndNewPassword.getUserId());
+        if (user == null) {
+            return false;
+        }
+
+        // 2. 验证原密码是否正确（明文 vs 密文）
+        if (!passwordEncoder.matches(oldAndNewPassword.getOldPassword(), user.getPassword())) {
+            return false;
+        }
+
+        // 3. 加密新密码
+        oldAndNewPassword.setNewPassword(passwordEncoder.encode(oldAndNewPassword.getNewPassword()));
+
+        // 4. 更新密码
+        return userMapper.updatePassword(oldAndNewPassword) != 0;
+    }
+
+    //检查邮箱、手机号有没有被其它用户占用
+    @Override
+    public boolean checkUpdate(User user) {
+        // 检查邮箱是否被其他用户占用
+        User existingByEmail = userMapper.selectByEmail(user.getEmail());
+        if (existingByEmail != null && !existingByEmail.getId().equals(user.getId())) {
+            throw new RuntimeException("该邮箱已被其他用户绑定");
+        }
+
+        // 检查手机号是否被其他用户占用
+        User existingByPhone = userMapper.selectByPhone(user.getPhone());
+        if (existingByPhone != null && !existingByPhone.getId().equals(user.getId())) {
+            throw new RuntimeException("该手机号已被其他用户绑定");
+        }
+
+        user.setUpdateTime(LocalDateTime.now());
+        return userMapper.update(user) != 0;
     }
 
 }

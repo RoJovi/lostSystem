@@ -4,6 +4,7 @@ import com.jovi.mapper.*;
 import com.jovi.pojo.*;
 import com.jovi.service.AdminService;
 import com.jovi.utils.JwtUtils;
+import com.jovi.utils.PasswordEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private AdminMapper adminMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private UserMapper userMapper;
@@ -43,9 +47,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public LoginAdmin login(Admin admin) {
-        Admin a = adminMapper.selectByAdminNumAndPassword(admin);
+        Admin a = adminMapper.selectByAdminNum(admin);
 
         if (a == null) {
+            return null;
+        }
+
+        // 2. 验证密码（明文 vs 密文）
+        if (!passwordEncoder.matches(admin.getPassword(), a.getPassword())) {
             return null;
         }
 
@@ -196,7 +205,9 @@ public class AdminServiceImpl implements AdminService {
 
         // 活跃用户数（发帖+评论 >= 5）
         stats.setActiveUsers(userMapper.countActive());
-
+        LocalDateTime now = LocalDateTime.now();
+        stats.setActiveUsersLast7Days(userMapper.countActiveUsersByTime(now.minusDays(7)));
+        stats.setActiveUsersLast30Days(userMapper.countActiveUsersByTime(now.minusDays(30)));
         // 失物统计
         stats.setTotalLost(lostItemMapper.countAll());
         stats.setTotalFound(foundItemMapper.countAll());
@@ -220,13 +231,17 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public boolean updatePassword(Integer adminId, String oldPassword, String newPassword) {
         // 1. 验证原密码是否正确
-        Admin admin = adminMapper.selectByIdAndPassword(adminId, oldPassword);
+        Admin admin = adminMapper.selectPasswordById(adminId);
         if (admin == null) {
             return false;
         }
 
+        if (!passwordEncoder.matches(oldPassword, admin.getPassword())) {
+            return false;
+        }
+
         // 2. 更新密码
-        adminMapper.updatePassword(adminId, newPassword);
+        adminMapper.updatePassword(adminId, passwordEncoder.encode(newPassword));
         log.info("管理员 {} 密码修改成功", adminId);
 
         return true;
