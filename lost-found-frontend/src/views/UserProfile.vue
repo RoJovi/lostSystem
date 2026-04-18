@@ -8,8 +8,8 @@
       </div>
       <el-dropdown trigger="click">
   <div class="user-info">
-    <img :src="userInfo?.avatar || '/default-avatar.png'" class="avatar" />
-    <span class="nickname">{{ userInfo?.nickname || '用户' }}</span>
+    <img :src="userStore.userInfo?.avatar || '/default-avatar.png'" class="avatar" />
+<span class="nickname">{{ userStore.userInfo?.nickname || '用户' }}</span>
     <span class="arrow">▼</span>
   </div>
   <template #dropdown>
@@ -29,15 +29,16 @@
         <div class="profile-info">
           <div class="profile-name">
             {{ targetUser?.nickname || targetUser?.username }}
-            <span class="user-type" v-if="targetUser?.post_count >= 10">🌟 活跃用户</span>
+            <span class="user-type" v-if="(targetUser?.postCount + targetUser?.commentCount) >= 5">🌟 活跃用户</span>
+	<span v-if="targetUser?.status === 0" class="user-status-badge banned">已封禁</span>
           </div>
           <div class="profile-stats">
             <div class="stat-item">
-              <span class="stat-value">{{ targetUser?.post_count || 0 }}</span>
+              <span class="stat-value">{{ targetUser?.postCount || 0 }}</span>
               <span class="stat-label">发布</span>
             </div>
             <div class="stat-item">
-              <span class="stat-value">{{ targetUser?.comment_count || 0 }}</span>
+              <span class="stat-value">{{ targetUser?.commentCount || 0 }}</span>
               <span class="stat-label">评论</span>
             </div>
           </div>
@@ -51,13 +52,26 @@
             💬 私信
           </el-button>
           <el-dropdown v-if="!isSelf" trigger="click" @command="handleUserAction">
-            <span class="more-btn">⋮</span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="report">🚨 举报该用户</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+  <span class="more-btn">⋮</span>
+  <template #dropdown>
+    <el-dropdown-menu>
+      <!-- 管理员：显示删除和封禁/解封 -->
+      <template v-if="userType === 1">
+        <el-dropdown-item command="delete">🗑️ 删除用户</el-dropdown-item>
+        <el-dropdown-item 
+          :command="targetUser?.status === 1 ? 'ban' : 'unban'"
+        >
+          {{ targetUser?.status === 1 ? '🚫 封禁用户' : '🔓 解封用户' }}
+        </el-dropdown-item>
+      </template>
+      
+      <!-- 普通用户：显示举报 -->
+      <template v-else>
+        <el-dropdown-item command="report">🚨 举报该用户</el-dropdown-item>
+      </template>
+    </el-dropdown-menu>
+  </template>
+</el-dropdown>
         </div>
       </div>
 
@@ -65,6 +79,8 @@
         <h3>{{ targetUser?.nickname || targetUser?.username }} 的帖子</h3>
         <div class="post-list">
           <div v-for="post in userPosts" :key="post.id" class="post-card" @click="goToDetail(post)">
+	<!-- 添加图片 -->
+  		<img v-if="post.imageUrl" :src="post.imageUrl" class="post-cover" />
             <div class="post-header">
               <span class="post-type" :class="post.type === 0 ? 'lost' : 'found'">
                 {{ post.type === 0 ? '寻物' : '拾物' }}
@@ -120,8 +136,10 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getUserInfoById, getUserPosts, sendMessage, report } from '@/api'
+import { banUser, deleteUser } from '@/api'
 import { formatTime } from '@/utils/format'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -139,7 +157,13 @@ const reportForm = ref({ reason: '', description: '' })
 
 const currentUser = computed(() => userStore.userInfo)
 const userType = computed(() => userStore.userType)
-const isSelf = computed(() => currentUser.value?.id === userId.value)
+const isSelf = computed(() => {
+    // 管理员永远不认为是自己查看自己
+    if (userType.value === 1) {
+        return false
+    }
+    return currentUser.value?.id === userId.value
+})
 
 const loadTargetUser = async () => {
   const res = await getUserInfoById(userId.value)
@@ -169,9 +193,59 @@ const sendMessageToUser = async () => {
   } catch (error) {}
 }
 
-const handleUserAction = (command) => {
-  if (command === 'report') {
-    showReportDialog.value = true
+const handleUserAction = async (command) => {
+  if (userType.value === 1) {
+    // 管理员操作
+    if (command === 'delete') {
+      ElMessageBox.confirm(
+        `确定要删除用户 "${targetUser.value?.nickname || targetUser.value?.username}" 吗？\n此操作将同时删除该用户的所有帖子和评论，且不可恢复！`,
+        '警告',
+        {
+          confirmButtonText: '确定删除',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).then(async () => {
+        await deleteUser(userId.value)
+        ElMessage.success('删除成功')
+        router.back()
+      }).catch(() => {})
+    } 
+    else if (command === 'ban') {
+      ElMessageBox.confirm(
+        `确定要封禁用户 "${targetUser.value?.nickname || targetUser.value?.username}" 吗？`,
+        '封禁用户',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).then(async () => {
+        await banUser(userId.value, 0)
+        ElMessage.success('已封禁用户')
+        targetUser.value.status = 0  // 更新本地状态
+      }).catch(() => {})
+    }
+    else if (command === 'unban') {
+      ElMessageBox.confirm(
+        `确定要解封用户 "${targetUser.value?.nickname || targetUser.value?.username}" 吗？`,
+        '解封用户',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info'
+        }
+      ).then(async () => {
+        await banUser(userId.value, 1)
+        ElMessage.success('已解封用户')
+        targetUser.value.status = 1  // 更新本地状态
+      }).catch(() => {})
+    }
+  } else {
+    // 普通用户举报
+    if (command === 'report') {
+      showReportDialog.value = true
+    }
   }
 }
 
@@ -241,6 +315,19 @@ onMounted(() => {
   gap: 8px;
   cursor: pointer;
   position: relative;
+}
+.user-status-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.user-status-badge.active {
+  background: #e8f5e9;
+  color: #4caf50;
+}
+.user-status-badge.banned {
+  background: #ffebee;
+  color: #f44336;
 }
 .avatar {
   width: 36px;
@@ -371,6 +458,13 @@ onMounted(() => {
 .post-time {
   font-size: 12px;
   color: #999;
+}
+.post-cover {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
 }
 .empty {
   text-align: center;
