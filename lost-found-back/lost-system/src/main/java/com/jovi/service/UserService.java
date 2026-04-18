@@ -17,4 +17,6 @@ public interface UserService {
     boolean checkId(String email,String phone);
 
     boolean updatePassword(OldAndNewPassword oldAndNewPassword);
+
+    boolean checkUpdate(User user);
 }
