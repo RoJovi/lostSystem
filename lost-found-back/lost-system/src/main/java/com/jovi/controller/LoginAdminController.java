@@ -1,6 +1,7 @@
 package com.jovi.controller;
 
 import com.jovi.pojo.LoginAdmin;
+import com.jovi.utils.ValidationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +27,16 @@ public class LoginAdminController {
     public Result Login(@RequestBody Admin admin) {
         log.info("管理员登录尝试: {}", admin.getAdminNum());
         LoginAdmin info = adminService.login(admin);
+
+        //工号正则
+        if (!ValidationUtils.isValidAdminNum(admin.getAdminNum())) {
+            return Result.error(ValidationUtils.getAdminNumRequirement());
+        }
+        // 密码长度校验
+        if (!ValidationUtils.isValidPassword(admin.getPassword())) {
+            return Result.error(ValidationUtils.getPasswordRequirement());
+        }
+
         if (info != null) {
             log.info("登录成功: {}, id: {}", admin.getAdminNum(), admin.getId());
             return Result.success(info);

@@ -4,6 +4,7 @@ import com.jovi.pojo.*;
 import com.jovi.service.AIService;
 import com.jovi.service.AdminService;
 import com.jovi.service.ReportService;
+import com.jovi.utils.ValidationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,11 @@ public class AdminController {
         admin.setId(adminId);
         if (admin == null) {
             return Result.error("用户不存在");
+        }
+
+        // 密码长度校验
+        if (!ValidationUtils.isValidPassword(admin.getPassword())) {
+            return Result.error(ValidationUtils.getPasswordRequirement());
         }
 
         adminService.update(admin);

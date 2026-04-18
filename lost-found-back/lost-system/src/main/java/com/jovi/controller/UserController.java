@@ -4,6 +4,8 @@ import com.jovi.pojo.OldAndNewPassword;
 import com.jovi.pojo.Result;
 import com.jovi.pojo.User;
 import com.jovi.service.UserService;
+import com.jovi.utils.PasswordEncoder;
+import com.jovi.utils.ValidationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,18 @@ public class UserController {
             return Result.error("手机号或邮箱已经被绑定过了哦");
         }
 
+        // 邮箱格式校验
+        if (!ValidationUtils.isValidEmail(user.getEmail())) {
+            return Result.error("邮箱格式不正确");
+        }
+        // 手机号格式校验
+        if (!ValidationUtils.isValidPhone(user.getPhone())) {
+            return Result.error("手机号格式不正确");
+        }
+        // 密码长度校验
+        if (!ValidationUtils.isValidPassword(user.getPassword())) {
+            return Result.error(ValidationUtils.getPasswordRequirement());
+        }
         userService.register(user);
         return Result.success();
     }
@@ -63,9 +77,25 @@ public class UserController {
             return Result.error("用户不存在");
         }
 
+        // 邮箱格式校验
+        if (user.getEmail() != null && !ValidationUtils.isValidEmail(user.getEmail())) {
+            return Result.error("邮箱格式不正确");
+        }
+        // 手机号格式校验
+        if (user.getPhone() != null && !ValidationUtils.isValidPhone(user.getPhone())) {
+            return Result.error("手机号格式不正确");
+        }
+
+        try {
+            userService.checkUpdate(user);  // 邮箱/手机号占用提示
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+
         if(userService.update(user)) {
             return Result.success();
         }
+
         return Result.error("信息修改失败");
     }
 
@@ -80,6 +110,11 @@ public class UserController {
 
         if (userService.getById(userId) == null) {
             return Result.error("用户不存在");
+        }
+
+        // 密码长度校验
+        if (!ValidationUtils.isValidPassword(oldAndNewPassword.getNewPassword())) {
+            return Result.error(ValidationUtils.getPasswordRequirement());
         }
 
         oldAndNewPassword.setUserId(userId);

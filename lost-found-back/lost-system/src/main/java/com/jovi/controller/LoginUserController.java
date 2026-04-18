@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.jovi.utils.ValidationUtils.*;
+
 @RestController
 @Slf4j
 @RequestMapping("/user/login")
@@ -21,6 +23,14 @@ public class LoginUserController {
 
     @PostMapping
     public Result Login(@RequestBody LoginUserDTO loginUserDTO) {
+        // 邮箱格式校验
+        if (!isValidEmail(loginUserDTO.getAccount()) && !isValidPhone(loginUserDTO.getAccount())) {
+            return Result.error("邮箱或手机号格式不正确");
+        }
+        // 密码长度校验
+        if (!isValidPassword(loginUserDTO.getPassword())) {
+            return Result.error(getPasswordRequirement());
+        }
         log.info("普通用户登录尝试: {}", loginUserDTO.getAccount());
         LoginUser info = userService.login(loginUserDTO);
         if (info != null) {
