@@ -68,21 +68,32 @@
   </div>
 </div>
     <div class="report-actions" v-if="report.status === 0">
-      <el-button type="success" size="small" @click="handleReportAction(report.id, 'approve')">通过举报</el-button>
-      <el-button type="danger" size="small" plain @click="handleReportAction(report.id, 'reject')">驳回举报</el-button>
-      <!-- 举报用户：只封禁 -->
+      <!-- 驳回举报（通用） -->
+  <el-button type="danger" size="small" plain @click="handleReject(report.id)">驳回举报</el-button>
+  
+  <!-- 举报用户：封禁用户 -->
   <el-button 
     v-if="report.targetUserId" 
-    type="danger" 
+    type="warning" 
     size="small" 
     @click="banUserOnly(report.targetUserId, report.id)"
   >
     封禁用户
   </el-button>
   
+  <!-- 举报帖子：删除帖子 -->
+  <el-button 
+    v-else-if="report.itemId && !report.targetUserId" 
+    type="warning" 
+    size="small" 
+    @click="deletePostOnly(report)"
+  >
+    删除帖子
+  </el-button>
+  
   <!-- 举报帖子：封禁用户并删除 -->
   <el-button 
-    v-else-if="report.itemId" 
+    v-if="report.itemId && !report.targetUserId" 
     type="danger" 
     size="small" 
     @click="banUserAndDeletePost(report)"
@@ -141,16 +152,14 @@ const loadReports = async () => {
     loading.value = false
   }
 }
-const handleReportAction = async (id, action) => {
-  if (action === 'approve' && report.itemId) {
-    // 通过举报：只删除帖子，不封禁用户
-    await deletePost(report.itemId, report.itemType)
-  }
-  ElMessage.success(action === 'approve' ? '已通过举报，帖子将被删除' : '已驳回举报')
+// 驳回举报
+const handleReject = async (id) => {
+  await handleReport(id, 'reject')
+  ElMessage.success('已驳回举报')
   loadReports()
 }
 
-// 封禁用户（举报用户时）
+// 只封禁用户（举报用户）
 const banUserOnly = async (userId, reportId) => {
   ElMessageBox.confirm('确定要封禁该用户吗？', '警告', {
     confirmButtonText: '确定',
@@ -164,7 +173,22 @@ const banUserOnly = async (userId, reportId) => {
   }).catch(() => {})
 }
 
-// 封禁用户并删除帖子（举报帖子时）
+// 只删除帖子（举报帖子）
+const deletePostOnly = async (report) => {
+  ElMessageBox.confirm('确定要删除该帖子吗？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    const typeStr = report.itemType === 0 ? 'lost' : 'found'
+    await deletePost(report.itemId, typeStr)
+    await handleReport(report.id, 'approve')
+    ElMessage.success('已删除帖子')
+    loadReports()
+  }).catch(() => {})
+}
+
+// 封禁用户并删除帖子（举报帖子）
 const banUserAndDeletePost = async (report) => {
   // 获取帖子作者
   let userId = report.targetUserId
@@ -181,25 +205,20 @@ const banUserAndDeletePost = async (report) => {
     }
   }
   
-  if (!userId) {
-    ElMessage.error('无法获取被举报用户ID')
-    return
-  }
-  
   ElMessageBox.confirm('确定要封禁该用户并删除其帖子吗？', '警告', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     await banUser(userId, 0)
-    if (report.itemId) {
-      await deletePost(report.itemId, report.itemType)
-    }
+    const typeStr = report.itemType === 0 ? 'lost' : 'found'
+    await deletePost(report.itemId, typeStr)
     await handleReport(report.id, 'approve')
-    ElMessage.success('已封禁用户并删除违规帖子')
+    ElMessage.success('已封禁用户并删除帖子')
     loadReports()
   }).catch(() => {})
-}
+}  
+
 const goToAdminHome = () => router.push('/admin')
 const goToUserManage = () => router.push('/admin/users')
 const goToTopRequests = () => router.push('/admin/top-requests')

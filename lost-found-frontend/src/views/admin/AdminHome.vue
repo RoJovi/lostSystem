@@ -85,7 +85,6 @@
               <span>{{ report.reason }}</span>
               <span class="recent-time">{{ formatTime(report.createTime) }}</span>
             </div>
-            <el-button size="small" type="primary" @click="handleReport(report.id, 'approve')">处理</el-button>
           </div>
           <div v-if="recentReports.length === 0" class="empty">暂无举报</div>
         </div>

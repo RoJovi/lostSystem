@@ -53,10 +53,16 @@ public class PostController {
     @DeleteMapping("/post/{type}/{id}")
     public Result deletePost(@PathVariable String type,
                              @PathVariable Integer id,
-                             @RequestAttribute("userId") Integer userId) {
-        log.info("用户 {} 删除帖子，类型: {}, ID: {}", userId, type, id);
+                             @RequestAttribute("userId") Integer userId,
+                             @RequestAttribute("userType") Integer userType) {
+        // 将数字类型转换为字符串类型
+        String realType = type;
+        if ("0".equals(type)) realType = "lost";
+        if ("1".equals(type)) realType = "found";
 
-        boolean success = postService.deletePost(type, id, userId);
+        log.info("用户 {} 删除帖子，类型: {}, ID: {}", userId, realType, id);
+
+        boolean success = postService.deletePost(realType, id, userId, userType);
 
         if (!success) {
             return Result.error("帖子不存在或无权限删除");

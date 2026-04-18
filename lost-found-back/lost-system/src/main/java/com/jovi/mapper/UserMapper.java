@@ -18,8 +18,7 @@ public interface UserMapper {
     @Select("SELECT * FROM user WHERE email = #{account}")
     User selectByEmail(String email) ;
 
-    //用id换基本信息，查询回显
-    @Select("SELECT * FROM user WHERE id = #{id} ")
+    @Select("SELECT * FROM user WHERE id = #{id}")
     User selectById(Integer id);
 
     //改名，改邮箱，改电话号，改头像
@@ -68,15 +67,12 @@ public interface UserMapper {
     @Update("UPDATE user SET post_count = post_count - 1 WHERE id = #{userId} AND post_count > 0")
     void decrementPostCount(Integer userId);
 
-    // 查询指定时间段内活跃的用户（发帖+评论 >= 5）
-    @Select("SELECT COUNT(*) FROM (" +
-            "SELECT u.id FROM user u " +
-            "LEFT JOIN lost_item l ON u.id = l.user_id AND l.create_time >= #{startTime} " +
-            "LEFT JOIN found_item f ON u.id = f.user_id AND f.create_time >= #{startTime} " +
-            "LEFT JOIN comment c ON u.id = c.user_id AND c.create_time >= #{startTime} " +
-            "WHERE l.id IS NOT NULL OR f.id IS NOT NULL OR c.id IS NOT NULL " +
-            "GROUP BY u.id " +
-            "HAVING COUNT(DISTINCT l.id) + COUNT(DISTINCT f.id) + COUNT(DISTINCT c.id) >= 5" +
-            ") AS active_users")
-    int countActiveUsersByTime(LocalDateTime startTime);
+    @Select("SELECT COUNT(*) FROM user WHERE is_active = 1")
+    Integer countActiveUsers();
+
+    @Update("UPDATE user u SET u.is_active = " +
+            "(EXISTS(SELECT 1 FROM lost_item WHERE user_id = u.id AND create_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)) OR " +
+            " EXISTS(SELECT 1 FROM found_item WHERE user_id = u.id AND create_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)) OR " +
+            " EXISTS(SELECT 1 FROM comment WHERE user_id = u.id AND create_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)))")
+    int updateActiveStatus();
 }

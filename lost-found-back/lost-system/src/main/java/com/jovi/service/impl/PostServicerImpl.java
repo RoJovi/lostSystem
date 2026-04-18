@@ -42,31 +42,32 @@ public class PostServicerImpl implements PostService {
     }
 
     @Override
-    public boolean deletePost(String type, Integer id, Integer userId) {
+    public boolean deletePost(String type, Integer id, Integer userId, Integer userType) {
         if ("lost".equalsIgnoreCase(type)) {
-            // 1. 检查帖子是否存在且属于当前用户
             Integer ownerId = lostItemMapper.selectUserIdById(id);
             if (ownerId == null) {
                 log.warn("失物帖子不存在，id: {}", id);
                 return false;
             }
-            if (!ownerId.equals(userId)) {
+            // 管理员或作者可以删除
+            if (!ownerId.equals(userId) && userType != 1) {
                 log.warn("用户 {} 无权删除帖子 {}", userId, id);
                 return false;
             }
-            // 2. 删除帖子
             lostItemMapper.deleteById(id);
-            userMapper.decrementPostCount(userId);
+            // 只有作者删除时才减少帖子计数（管理员删除不减少）
+            if (ownerId.equals(userId)) {
+                userMapper.decrementPostCount(userId);
+            }
             log.info("删除失物帖子成功，id: {}", id);
 
         } else if ("found".equalsIgnoreCase(type)) {
-            // 检查权限
             Integer ownerId = foundItemMapper.selectUserIdById(id);
             if (ownerId == null) {
                 log.warn("拾物帖子不存在，id: {}", id);
                 return false;
             }
-            if (!ownerId.equals(userId)) {
+            if (!ownerId.equals(userId) && userType != 1) {
                 log.warn("用户 {} 无权删除帖子 {}", userId, id);
                 return false;
             }

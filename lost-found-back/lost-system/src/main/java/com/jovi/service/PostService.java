@@ -10,7 +10,7 @@ public interface PostService {
 
     List<Post> getAll(Integer userId);
 
-    boolean deletePost(String type, Integer id, Integer userId);
+    boolean deletePost(String type, Integer id, Integer userId, Integer userType);
 
     boolean updatePost(String type, Integer id, UpdatePostRequest request, Integer userId);
 
