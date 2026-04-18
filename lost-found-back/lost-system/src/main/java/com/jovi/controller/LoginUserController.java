@@ -33,11 +33,17 @@ public class LoginUserController {
         }
         log.info("普通用户登录尝试: {}", loginUserDTO.getAccount());
         LoginUser info = userService.login(loginUserDTO);
-        if (info != null) {
-            log.info("登录成功: {}, id: {}", loginUserDTO.getAccount(), info.getId());
-            return Result.success(info);
+        if (info == null) {
+            log.warn("登录失败，账号或密码错误: {}", loginUserDTO.getAccount());
+            return Result.error("用户名或密码错误");
         }
-        log.warn("登录失败，账号或密码错误: {}", loginUserDTO.getAccount());
-        return Result.error("用户名或密码错误");
+
+        // 再判断封禁状态
+        if (info.getStatus() == 0) {
+            return Result.error("账号已被封禁，请联系管理员");
+        }
+
+        log.info("登录成功: {}, id: {}", loginUserDTO.getAccount(), info.getId());
+        return Result.success(info);
     }
 }

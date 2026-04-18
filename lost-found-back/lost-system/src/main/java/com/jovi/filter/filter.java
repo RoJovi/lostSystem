@@ -1,5 +1,7 @@
 package com.jovi.filter;
 
+import com.jovi.mapper.UserMapper;
+import com.jovi.pojo.User;
 import com.jovi.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
@@ -7,12 +9,17 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 @WebFilter
 @Slf4j
+@Component
 public class filter implements Filter {
+
+    @Autowired UserMapper userMapper;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -65,6 +72,17 @@ public class filter implements Filter {
             Integer userType = (Integer) claims.get("userType");  // 0为普通用户，1为管理员
             log.info("用户 {} 以 {} 身份访问 {}", userId, userType, requestURI);
             // 权限校验
+
+            // 检查用户状态
+            if (userType == 0) {  // 普通用户
+                User user = userMapper.selectById(userId);
+                if (user == null || user.getStatus() == 0) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("{\"code\":403,\"msg\":\"账号已被封禁\",\"data\":null}");
+                    return;
+                }
+            }
+
             if (requestURI.contains("/admin")) {
                 // 访问管理员接口，必须是 admin
                 if (userType != 1) {

@@ -14,4 +14,5 @@ public class LoginUser {
     private String phone;
     private String avatar;
     private String token;
+    private Integer status;  // 状态：0-封禁 1-正常
 }

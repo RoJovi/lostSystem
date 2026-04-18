@@ -23,6 +23,15 @@ request.interceptors.response.use(
     response => {
         const res = response.data
         
+	if (res.code === 403 || (res.msg && res.msg.includes('封禁'))) {
+    		ElMessage.error(res.msg || '账号已被封禁')
+   		 localStorage.removeItem('token')
+   		 localStorage.removeItem('userType')
+   		 setTimeout(() => {
+        		window.location.href = '/login'
+    		}, 1000)
+   		 return Promise.reject(new Error(res.msg))
+	}
         // 后端统一返回格式
         if (res.code !== 200) {
             if (res.code === 401) {

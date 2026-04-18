@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
         dataMap.put("userType", 0);            //0表示普通用户
         String jwt = JwtUtils.generateToken(dataMap);
 
-        return new LoginUser(user.getId(), user.getNickname(), user.getEmail(), user.getPhone(), user.getAvatar(), jwt);
+        return new LoginUser(user.getId(), user.getNickname(), user.getEmail(), user.getPhone(), user.getAvatar(), jwt,user.getStatus());
     }
 
     //查询普通用户信息
