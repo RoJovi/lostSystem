@@ -21,6 +21,8 @@
 </el-dropdown>
     </div>
 
+<div class="header-placeholder"></div> 
+
     <div class="post-content" v-if="post">
       <!-- 顶部：发帖人头像和昵称 -->
       <div class="post-author">
@@ -534,6 +536,7 @@ onMounted(() => {
 
 <style scoped>
 .post-detail-container {
+  height: 70px;
   min-height: 100vh;
   background: #f5f5f5;
 }
@@ -550,6 +553,10 @@ onMounted(() => {
   padding: 0 24px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   z-index: 100;
+}
+.header + * {
+  margin-top: 0 !important;
+  padding-top: 60px !important;
 }
 .nav-links span {
   cursor: pointer;
@@ -615,7 +622,7 @@ onMounted(() => {
 }
 .post-content {
   max-width: 800px;
-  margin: 80px auto 40px;
+  margin: 30px auto 40px;
   background: white;
   border-radius: 16px;
   padding: 24px;
