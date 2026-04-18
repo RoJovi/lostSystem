@@ -225,7 +225,7 @@ onMounted(() => {
 <style scoped>
 .post-cover {
   width: 100%;
-  height: 150px;
+  height: 300px;
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 12px;
@@ -370,7 +370,7 @@ onMounted(() => {
 }
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 .post-card {
@@ -408,7 +408,7 @@ onMounted(() => {
 }
 .post-card h3 {
   margin: 8px 0;
-  font-size: 16px;
+  font-size: 18px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

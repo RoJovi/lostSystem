@@ -57,7 +57,21 @@
           </div>
         </div>
       </div>
-
+<!-- AI 总结卡片 -->
+<div class="ai-summary-card">
+  <div class="summary-header">
+    <h3>🤖 AI 周报</h3>
+    <el-button type="primary" size="small" @click="generateAISummary" :loading="aiLoading">
+      {{ aiLoading ? '生成中...' : '生成报告' }}
+    </el-button>
+  </div>
+  <div v-if="aiSummary" class="summary-content">
+    {{ aiSummary }}
+  </div>
+  <div v-else class="summary-placeholder">
+    点击「生成报告」获取 AI 分析
+  </div>
+</div>
       <!-- 近期动态 -->
       <div class="recent-section">
         <div class="section-header">
@@ -108,6 +122,7 @@ import { useUserStore } from '@/stores/user'
 import { getStatistics, getReports, getTopRequests, handleReport, approveTopRequest } from '@/api'
 import { formatTime } from '@/utils/format'
 import { ElMessage } from 'element-plus'
+import { getAIStatistics } from '@/api'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -164,6 +179,21 @@ onMounted(() => {
   loadRecentReports()
   loadRecentTopRequests()
 })
+
+const aiLoading = ref(false)
+const aiSummary = ref('')
+
+const generateAISummary = async () => {
+  aiLoading.value = true
+  try {
+    const res = await getAIStatistics()
+    aiSummary.value = res
+  } catch (error) {
+    ElMessage.error('生成失败')
+  } finally {
+    aiLoading.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -255,10 +285,39 @@ onMounted(() => {
   color: #999;
   font-size: 14px;
 }
+.ai-summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+.summary-header h3 {
+  margin: 0;
+}
+.summary-content {
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+}
+.summary-placeholder {
+  color: #999;
+  text-align: center;
+  padding: 40px;
+}
 .recent-section {
   background: white;
   border-radius: 16px;
   padding: 20px;
+  margin-top: 20px;
   margin-bottom: 20px;
 }
 .section-header {

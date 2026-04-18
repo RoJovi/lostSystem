@@ -57,6 +57,8 @@ export const addLocation = (name, parentId) => request.post('/location', { name,
 // ==================== AI相关 ====================
 // AI补全描述
 export const aiComplete = (type, title, description) => request.post('/ai/complete', { type, title, description })
+// 获取 AI 统计报告
+export const getAIStatistics = () => request.get('/admin/ai/statistics')
 
 // ==================== 评论相关 ====================
 // 获取评论列表

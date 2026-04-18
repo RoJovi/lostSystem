@@ -45,7 +45,25 @@
           <div class="stat-label">已找回/已归还</div>
         </div>
       </div>
-
+<!-- 新增：活跃用户时间段卡片 -->
+<div class="stats-grid" style="margin-top: 20px;">
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.activeUsersLast7Days || 0 }}</div>
+    <div class="stat-label">近7天活跃用户</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.activeUsersLast30Days || 0 }}</div>
+    <div class="stat-label">近30天活跃用户</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.totalUsers || 0 }}</div>
+    <div class="stat-label">总用户数</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.pendingReports || 0 }}</div>
+    <div class="stat-label">待处理举报</div>
+  </div>
+</div>
       <!-- 图表区域 -->
       <div class="chart-row">
         <div class="chart-card">
@@ -63,8 +81,25 @@
         <h3>失物高发区域 TOP 5</h3>
         <div ref="locationChartRef" class="chart" style="height: 300px"></div>
       </div>
+<!-- AI 总结卡片 -->
+<div class="ai-summary-card">
+  <div class="summary-header">
+    <h3>🤖 AI 周报分析</h3>
+    <el-button type="primary" @click="generateAISummary" :loading="aiLoading">
+      {{ aiLoading ? '生成中...' : '生成报告' }}
+    </el-button>
+  </div>
+  <div v-if="aiSummary" class="summary-content">
+    {{ aiSummary }}
+  </div>
+  <div v-else class="summary-placeholder">
+    点击「生成报告」获取 AI 智能分析
+  </div>
+</div>
+
     </div>
   </div>
+
 </template>
 
 <script setup>
@@ -73,6 +108,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getStatistics } from '@/api'
 import * as echarts from 'echarts'
+import { getAIStatistics } from '@/api'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -162,6 +198,21 @@ watch(() => [postChartRef.value, userChartRef.value, locationChartRef.value], ()
     if (locationChart) locationChart.resize()
   }, 100)
 })
+
+const aiLoading = ref(false)
+const aiSummary = ref('')
+
+const generateAISummary = async () => {
+  aiLoading.value = true
+  try {
+    const res = await getAIStatistics()
+    aiSummary.value = res
+  } catch (error) {
+    ElMessage.error('生成失败')
+  } finally {
+    aiLoading.value = false
+  }
+}
 
 const goToAdminHome = () => router.push('/admin')
 const goToUserManage = () => router.push('/admin/users')
@@ -290,5 +341,33 @@ onMounted(() => {
 }
 .full-width {
   grid-column: span 2;
+}
+.ai-summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+.summary-header h3 {
+  margin: 0;
+}
+.summary-content {
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+}
+.summary-placeholder {
+  color: #999;
+  text-align: center;
+  padding: 40px;
 }
 </style>
