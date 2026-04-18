@@ -81,13 +81,23 @@ public class ReportServiceImpl implements ReportService {
 
             // 获取被举报的帖子标题
             if (report.getItemId() != null && report.getItemType() != null) {
-                String title = null;
-                if (report.getItemType() == 0) {
-                    title = lostItemMapper.selectTitleById(report.getItemId());
-                } else {
-                    title = foundItemMapper.selectTitleById(report.getItemId());
-                }
-                vo.setPostTitle(title != null ? title : "帖子已删除");
+                String title = report.getItemType() == 0 ?
+                        lostItemMapper.selectTitleById(report.getItemId()) :
+                        foundItemMapper.selectTitleById(report.getItemId());
+                vo.setPostTitle(title);
+                vo.setTargetUserId(null);
+            }
+            else if (report.getTargetUserId() != null) {
+                // 举报用户
+                vo.setPostTitle("举报用户");
+                vo.setTargetUserId(report.getTargetUserId());
+
+                // 补充被举报用户的名称
+                User targetUser = userMapper.selectById(report.getTargetUserId());
+                vo.setTargetUserName(targetUser != null ? targetUser.getNickname() : "未知用户");
+            }
+            else {
+                vo.setPostTitle("举报内容不存在");
             }
 
             result.add(vo);
