@@ -1,9 +1,6 @@
 package com.jovi.service.impl;
 
-import com.jovi.mapper.FoundItemMapper;
-import com.jovi.mapper.LocationMapper;
-import com.jovi.mapper.LostItemMapper;
-import com.jovi.mapper.PostMapper;
+import com.jovi.mapper.*;
 import com.jovi.pojo.Location;
 import com.jovi.pojo.Post;
 import com.jovi.pojo.UpdatePostRequest;
@@ -25,6 +22,9 @@ public class PostServicerImpl implements PostService {
 
     @Autowired
     private PostMapper postMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     private FoundItemMapper foundItemMapper;
@@ -56,6 +56,7 @@ public class PostServicerImpl implements PostService {
             }
             // 2. 删除帖子
             lostItemMapper.deleteById(id);
+            userMapper.decrementPostCount(userId);
             log.info("删除失物帖子成功，id: {}", id);
 
         } else if ("found".equalsIgnoreCase(type)) {
@@ -95,7 +96,7 @@ public class PostServicerImpl implements PostService {
             }
             // 更新失物帖子
             lostItemMapper.updatePost(id, request.getTitle(), request.getLocationId(),
-                    locationName, request.getTime(), request.getDescription());
+                    locationName, request.getTime(), request.getDescription(),request.getImageUrl());
             log.info("更新失物帖子成功，id: {}", id);
 
         } else if ("found".equalsIgnoreCase(type)) {
@@ -106,7 +107,7 @@ public class PostServicerImpl implements PostService {
             }
             // 更新拾物帖子
             foundItemMapper.updatePost(id, request.getTitle(), request.getLocationId(),
-                    locationName, request.getTime(), request.getDescription());
+                    locationName, request.getTime(), request.getDescription(),request.getImageUrl());
             log.info("更新拾物帖子成功，id: {}", id);
 
         } else {

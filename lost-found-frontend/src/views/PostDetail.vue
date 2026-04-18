@@ -149,6 +149,24 @@
         <el-form-item label="描述">
           <el-input v-model="editForm.description" type="textarea" :rows="4" />
         </el-form-item>
+<!-- 添加图片上传 -->
+    <el-form-item label="图片">
+      <div class="edit-upload-wrapper">
+        <img v-if="editForm.imageUrl" :src="editForm.imageUrl" class="edit-preview-image" />
+        <div v-else class="edit-image-placeholder">暂无图片</div>
+        <el-upload
+          :action="uploadUrl"
+          :headers="uploadHeaders"
+          :show-file-list="false"
+          :on-success="handleEditUploadSuccess"
+          :on-error="handleEditUploadError"
+        >
+          <el-button size="small" type="primary">上传新图片</el-button>
+        </el-upload>
+        <el-button v-if="editForm.imageUrl" size="small" type="danger" @click="removeEditImage">删除图片</el-button>
+      </div>
+      <div class="tip">支持jpg/png格式，不超过10MB</div>
+    </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
@@ -373,24 +391,44 @@ const findPath = (tree, targetId, path = []) => {
   return null
 }
 
+// 上传相关
+const uploadUrl = '/api/upload'
+const uploadHeaders = {
+  token: localStorage.getItem('token') || ''
+}
+
+// 打开编辑弹窗时，把当前图片也存入 editForm
 const openEditDialog = async () => {
-if (locationTree.value.length === 0) {
+  if (locationTree.value.length === 0) {
     await loadLocations()
   }
-let locationIdArray = null
-  if (post.value.locationId) {
-    locationIdArray = findPath(locationTree.value, post.value.locationId)
-  }
-  console.log('locationTree:', locationTree.value)
+  
   editForm.value = {
     title: post.value.title,
     locationId: post.value.locationId,
     time: post.value.lostTime || post.value.foundTime,
-    description: post.value.description || ''
+    description: post.value.description || '',
+    imageUrl: post.value.imageUrl || ''  // 添加图片字段
   }
   showEditDialog.value = true
 }
 
+// 上传成功回调
+const handleEditUploadSuccess = (res) => {
+  editForm.value.imageUrl = res.data
+  ElMessage.success('图片上传成功')
+}
+
+// 上传失败回调
+const handleEditUploadError = () => {
+  ElMessage.error('图片上传失败')
+}
+
+// 删除图片
+const removeEditImage = () => {
+  editForm.value.imageUrl = ''
+  ElMessage.success('已删除图片')
+}
 
 const submitEdit = async () => {
   try {
@@ -401,9 +439,10 @@ const submitEdit = async () => {
     }
     const data = {
       title: editForm.value.title,
-      locationId: editForm.value.locationId,
+      locationId: locationId,
       time: editForm.value.time,
-      description: editForm.value.description
+      description: editForm.value.description,
+      imageUrl: editForm.value.imageUrl || null 
     }
     const typeStr = postType.value === 0 ? 'lost' : 'found'
     await updatePost(postId.value, typeStr,data)
@@ -528,6 +567,34 @@ onMounted(() => {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
+}
+.edit-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.edit-preview-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.edit-image-placeholder {
+  width: 80px;
+  height: 80px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+}
+.tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
 }
 .dropdown {
   position: absolute;

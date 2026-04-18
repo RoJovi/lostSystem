@@ -29,13 +29,14 @@ public interface FoundItemMapper {
 
     @Update("UPDATE found_item SET title = #{title}, location_id = #{locationId}, " +
             "location_name = #{locationName}, found_time = #{time}, description = #{description}, " +
-            "update_time = NOW() WHERE id = #{id}")
+            "update_time = NOW() ,image_url = #{imageUrl} WHERE id = #{id}")
     int updatePost(@Param("id") Integer id,
                    @Param("title") String title,
                    @Param("locationId") Integer locationId,
                    @Param("locationName") String locationName,
                    @Param("time") LocalDateTime time,
-                   @Param("description") String description);
+                   @Param("description") String description,
+                   @Param("imageUrl") String imageUrl);
 
     @Update("UPDATE found_item SET status = 1, update_time = NOW() WHERE id = #{id}")
     int setResolved(Integer id);

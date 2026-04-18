@@ -36,13 +36,14 @@ public interface LostItemMapper {
     // 更新帖子
     @Update("UPDATE lost_item SET title = #{title}, location_id = #{locationId}, " +
             "location_name = #{locationName}, lost_time = #{time}, description = #{description}, " +
-            "update_time = NOW() WHERE id = #{id}")
+            "update_time = NOW() ,image_url = #{imageUrl} WHERE id = #{id}")
     int updatePost(@Param("id") Integer id,
                    @Param("title") String title,
                    @Param("locationId") Integer locationId,
                    @Param("locationName") String locationName,
                    @Param("time") LocalDateTime time,
-                   @Param("description") String description);
+                   @Param("description") String description,
+                   @Param("imageUrl") String imageUrl);
 
     // 设置为已找回
     @Update("UPDATE lost_item SET status = 1, update_time = NOW() WHERE id = #{id}")
@@ -65,4 +66,9 @@ public interface LostItemMapper {
 
     @Update("UPDATE lost_item SET is_top = 1, top_expire_time = #{expireTime} WHERE id = #{id}")
     int setTop(@Param("id") Integer id, @Param("expireTime") LocalDateTime expireTime);
+
+    //检查置顶过期
+    @Update("UPDATE lost_item SET is_top = 0, top_expire_time = NULL " +
+            "WHERE is_top = 1 AND top_expire_time < NOW()")
+    int expireTopItems();
 }

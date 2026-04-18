@@ -15,5 +15,6 @@ public class UpdatePostRequest {
     private Integer locationId;  // 地点ID
     private LocalDateTime time;         // 丢失/拾到时间
     private String description;  // 描述
+    private String imageUrl;
 
 }
