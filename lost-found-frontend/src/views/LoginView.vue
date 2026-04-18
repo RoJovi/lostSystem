@@ -40,7 +40,9 @@
           v-model="adminForm.adminNum" 
           placeholder="工号"
           required
-        />
+	@input="validateAdminNum"
+	/>
+	<span v-if="adminNumError" class="error-tip">{{ adminNumError }}</span>
         <input 
           type="password" 
           v-model="adminForm.password" 
@@ -113,8 +115,28 @@ const handleUserLogin = async () => {
   }
 }
 
+const adminNumError = ref('')
+
+const validateAdminNum = () => {
+  const num = adminForm.value.adminNum
+  if (!num) {
+    adminNumError.value = ''
+    return
+  }
+  if (!/^\d{4,10}$/.test(num)) {
+    adminNumError.value = '工号应为4-10位纯数字'
+  } else {
+    adminNumError.value = ''
+  }
+}
+
 const handleAdminLogin = async () => {
-  try {
+// 工号格式校验
+  if (!/^\d{4,10}$/.test(adminForm.value.adminNum)) {
+    ElMessage.error('工号格式不正确（4-10位纯数字）')
+    return
+  }  
+try {
     const res = await adminLogin(adminForm.value)
     userStore.setUser(res)
     ElMessage.success('登录成功')
@@ -236,5 +258,11 @@ input {
 .register-tip a {
   color: #667eea;
   cursor: pointer;
+}
+.error-tip {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
 }
 </style>
