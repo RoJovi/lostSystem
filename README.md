@@ -319,19 +319,19 @@ npm run dev
 
 ## 首页
 
-![image-20260419175650631](.\screenshots\image-20260419175650631.png)
+![image-20260419175650631](./screenshots/image-20260419175650631.png)
 
 ## 发布帖子
 
-![image-20260419175957942](.\screenshots\image-20260419175957942.png)
+![image-20260419175957942](./screenshots/image-20260419175957942.png)
 
 ## AI功能
 
-![image-20260419180244587](.\screenshots\image-20260419180244587.png)
+![image-20260419180244587](./screenshots/image-20260419180244587.png)
 
 ## 管理员统计
 
-  ![image-20260419180313403](.\screenshots\image-20260419180313403.png)
+  ![image-20260419180313403](./screenshots/image-20260419180313403.png)
 
 ## 遇到的坑与解决
 
